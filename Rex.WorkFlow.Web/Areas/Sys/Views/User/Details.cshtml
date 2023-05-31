@@ -1,0 +1,90 @@
+﻿@model UserShowDto
+@{
+    ViewData["Title"] = "用户信息";
+    Layout = "~/Views/Shared/_LayoutContent.cshtml";
+}
+
+@section css {
+    <style type="text/css">
+        .table-form tr td, .table-form tr th {
+            border: 1px #EFEFEF solid;
+        }
+
+        .user-img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .btn-container {
+            margin: 10px auto;
+            text-align: center;
+        }
+    </style>
+}
+
+@section scripts {
+    <script type="text/javascript">
+        layui.use(['jquery', 'util'], function () {
+            let $ = layui.jquery;
+            let util = layui.util;
+
+            // 格式化时间戳
+            $('#td_time').text(util.toDateString(@(Model.User.CreateTime) * 1000, 'yyyy-MM-dd HH:mm'));
+
+            // 关闭
+            $('.btn-cancel').on('click', function () {
+                var index = parent.layer.getFrameIndex(window.name);
+                parent.layer.close(index);
+            });
+        });
+    </script>
+}
+
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <form class="layui-form" action="javascript:void(0);">
+                <table class="table-form">
+                    <tr>
+                        <td colspan="2" style="text-align: center">
+                            <img src="@Model.User.HeadImg" class="user-img" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>工号</th>
+                        <td>
+                            @Model.User.JobNumber
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>用户名</th>
+                        <td>
+                            @Model.User.UserName
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>账号</th>
+                        <td>
+                            @Model.User.Account
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>账号状态</th>
+                        <td>
+                            @(Html.Raw(Model.User.IsDel == 0 ? "<span title=\"可用\" class=\"fa fa-check green\">可用</span>" : "<span title=\"已删除\" class=\"fa fa-trash red\">已删除</span>"))
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>创建时间</th>
+                        <td id="td_time">
+
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+    </div>
+    <div class="btn-container">
+        <button type="button" class="pear-btn btn-cancel">关闭</button>
+    </div>

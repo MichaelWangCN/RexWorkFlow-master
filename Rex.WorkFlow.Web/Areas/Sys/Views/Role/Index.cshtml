@@ -1,0 +1,91 @@
+﻿@model RoleIndexViewModel
+@{ ViewData["Title"] = "角色管理";
+    Layout = "~/Views/Shared/_LayoutContent.cshtml"; }
+
+@section css {
+    <style type="text/css">
+
+    </style>
+}
+
+@section scripts {
+    <script src="~/src/sys/role/js/index.js" asp-append-version="true"></script>
+}
+<!-- 查询部分 -->
+<div class="layui-card search-card">
+    <div class="layui-card-body">
+        <form class="layui-form">
+            <div class="layui-form-item">
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">角色名称</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="RoleName" autocomplete="off" maxlength="20" class="layui-input" value="@Model.RoleSearch.RoleName" />
+                    </div>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">所属系统</label>
+                    <div class="layui-input-inline" style="width: 150px">
+                        <select name="SystemId">
+                            <option value="0">-请选择系统-</option>
+                            @foreach (var item in Model.Systems)
+                            {
+                <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+}
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">角色状态</label>
+                    <div class="layui-input-inline" style="width: 100px">
+                        <select name="IsDel">
+                            <option value="-1" selected="@(Model.RoleSearch.IsDel==-1)">-全部-</option>
+                            <option value="0" selected="@(Model.RoleSearch.IsDel==0)">可用</option>
+                            <option value="1" selected="@(Model.RoleSearch.IsDel==1)">不可用</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <button class="pear-btn pear-btn-md pear-btn-primary btn-search" lay-submit lay-filter="role-query">
+                        <i class="layui-icon layui-icon-search"></i>
+                        查询
+                    </button>
+                    <button type="reset" class="pear-btn pear-btn-md">
+                        <i class="layui-icon layui-icon-refresh"></i>
+                        重置
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 列表部分 -->
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="role_table" lay-filter="role-table"></table>
+    </div>
+</div>
+
+<!-- 数据表格操作部分 -->
+@await Component.InvokeAsync("Menu")
+
+<!-- 状态 -->
+<script type="text/html" id="role_enable">
+    {{#if (d.IsDel == 0) { }}
+    <span title="可用" class="fa fa-check green"></span>
+    {{# }else{ }}
+    <span title="已删除" class="fa fa-trash red"></span>
+    {{# } }}
+</script>
+
+<!-- 日期格式化 -->
+<script type="text/html" id="role_CreateTime">
+    {{layui.util.toDateString(d.CreateTime * 1000, 'yyyy-MM-dd HH:mm')}}
+</script>
+
+<!-- 角色列表操作 -->
+<script type="text/html" id="role_bar">
+    <button class="pear-btn pear-btn-primary pear-btn-sm" lay-event="resource"><i class="fa fa-group"></i>&nbsp;分配资源</button>
+    <button class="pear-btn pear-btn-success pear-btn-sm" lay-event="user"><i class="fa fa-sitemap"></i>&nbsp;分配用户</button>
+    <button class="pear-btn pear-btn-sm" lay-event="look"><i class="fa fa-eye"></i>&nbsp;查看</button>
+</script>

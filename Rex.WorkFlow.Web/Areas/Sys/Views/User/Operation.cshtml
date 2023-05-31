@@ -1,0 +1,68 @@
+﻿@model UserShowDto
+@{
+    ViewData["Title"] = "用户操作";
+    Layout = "~/Views/Shared/_LayoutContent.cshtml";
+}
+
+@section css {
+    <style type="text/css">
+        /* 当前样式 */
+
+    </style>
+}
+
+@section scripts {
+    <script src="~/src/sys/user/js/operation.js" asp-append-version="true"></script>
+}
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form" action="javascript:void(0);">
+            <table class="table-form">
+                <tr>
+                    <th>工号</th>
+                    <td>
+                        <input type="text" name="JobNumber" lay-verify="JobNumber" placeholder="系统自动生成" readonly="readonly" disabled="disabled" autocomplete="off" class="layui-input layui-btn-disabled" value="@Model.User.JobNumber" />
+                    </td>
+                </tr>
+                <tr>
+                    <th>用户名</th>
+                    <td>
+                        <input type="text" name="UserName" lay-verify="UserName" placeholder="请输入用户名" maxlength="20" autocomplete="off" class="layui-input" value="@Model.User.UserName" />
+                    </td>
+                </tr>
+                <tr>
+                    <th>账号</th>
+                    <td>
+                        <input type="text" name="Account" lay-verify="Account" placeholder="请输入账号" maxlength="20" autocomplete="off" class="layui-input" value="@Model.User.Account" />
+                    </td>
+                </tr>
+                @{
+                    if (Model.User.UserId == 0)
+                    {
+                        <tr>
+                            <th>密码</th>
+                            <td>
+                                <input type="password" name="Password" lay-verify="Password" placeholder="请输入密码" maxlength="30" autocomplete="off" class="layui-input" />
+                            </td>
+                        </tr>
+                    }
+                }
+                <tr>
+                    <th>账号状态</th>
+                    <td>
+                        <input type="checkbox" name="IsDel" lay-skin="primary" @(Model.User.IsDel == 0 ? "checked=\"checked\"" : "") />
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: center">
+                        <input type="hidden" name="CreateTime" />
+                        <input type="hidden" name="UserId" value="@Model.User.UserId" />
+                        <!-- 加载操作按钮 -->
+                        @await Component.InvokeAsync("Menu", true)
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+

@@ -1,0 +1,221 @@
+﻿@{
+    ViewData["Title"] = "流程发起";
+    Layout = "~/Views/Shared/_LayoutContent.cshtml";
+}
+
+@section css {
+    <link href="~/src/js/zTree/css/bootstrapStyle/bootstrapStyle.css" rel="stylesheet" />
+    <style type="text/css">
+        .search-card-hide {
+            display: none !important;
+        }
+
+        .tree-container {
+            width: 200px;
+            border-right: 1px #E6E6E6 solid;
+            float: left;
+            min-height: 400px;
+        }
+
+        .table-container {
+            width: calc(100% - 220px);
+            float: right;
+        }
+    </style>
+}
+@section scripts {
+    <script src="~/src/js/zTree/js/jquery.min.js"></script>
+    <script src="~/src/js/zTree/js/jquery.ztree.core.js"></script>
+    <script src="~/src/js/zTree/js/jquery.ztree.excheck.js"></script>
+    <script src="~/src/js/zTree/js/jquery.ztree.exedit.js"></script>
+    <script type="text/javascript">
+        layui.use(['table', 'form', 'jquery'], function () {
+            let table = layui.table;
+            let form = layui.form;
+            let $ = layui.jquery;
+
+            let cols = [
+                [
+                    { field: 'FlowCode', width: 200, align: 'left', title: '流程编号' },
+                    { field: 'FlowName', align: 'left', title: '流程名称' },
+                    { field: 'CategoryName', align: 'left', title: '分类名称' },
+                    { field: 'FormName', align: 'left', title: '关联表单' },
+                    {
+                        title: '操作',
+                        toolbar: '#workFlowInstance-bar',
+                        align: 'center',
+                        width: 120
+                    }
+                ]
+            ];
+
+            // 初始化流程分类
+            initCategory();
+
+            // 数据表格渲染
+            table.render({
+                elem: '#workFlowInstance_table',
+                url: '/WF/WorkFlow/GetWorkFlowStartByListAsync',
+                page: false,
+                cols: cols,
+                skin: 'line',
+                toolbar: '#oper-toolbar',
+                defaultToolbar: [{
+                    layEvent: 'refresh',
+                    icon: 'layui-icon-refresh',
+                }, 'filter', 'print', 'exports'],
+                done: function (res, curr, count) {
+                    // 加载完成！
+                }
+            });
+
+            // 工具栏操作
+            table.on('toolbar(workFlowInstance-table)', function (obj) {
+                //let dataTable = table.checkStatus(obj.config.id).data;
+                switch (obj.event) {
+                    case "refresh": // 刷新数据表格
+                        table.reload('workFlowInstance_table');
+                        break;
+                    default:
+                }
+            });
+
+            // 数据表格操作
+            table.on('tool(workFlowInstance-table)', function (obj) {
+                switch (obj.event) {
+                    case "open": // 打开操作
+                        openWFI(obj.data);
+                        break;
+                    default:
+                }
+            });
+
+            // 初始化流程分类
+            function initCategory() {
+                $.ajax({
+                    url: '/WF/Category/GetCategoryTreeAsync',
+                    type: 'GET',
+                    data: {
+
+                    },
+                    dataType: 'json',
+                    // contentType: 'application/json;charset=utf-8',
+                    async: false,
+                    success: function (res) {
+                        if (res.code === 0) {
+                            var parentMenus = res.data;
+                            var zNodes = parentMenus;
+                            var setting = {
+                                view: {
+                                    dblClickExpand: false
+                                },
+                                data: {
+                                    simpleData: {
+                                        enable: true
+                                    }
+                                },
+                                callback: {
+                                    beforeClick: function (treeId, treeNode) {
+                                        table.reload('workFlowInstance_table', {
+                                            page: {
+                                                curr: 1 //重新从第 1 页开始
+                                            },
+                                            where: {
+                                                'categoryid': treeNode.id
+                                            }
+                                        });
+                                    }
+                                }
+                            };
+                            var treeobj = $.fn.zTree.init($("#treeCategory"), setting, zNodes);
+                            treeobj.expandAll(true);
+                            return;
+                        }
+                        layer.msg(res.msg, { icon: 5 });
+                    },
+                    error: function (data) {
+                        console.error(data.responseText);
+                    }
+                });
+            }
+
+            // 查询(提交)
+            form.on('submit(workFlowInstance-query)', function (data) {
+                table.reload('workFlowInstance_table');
+                return false;
+            });
+
+        });
+
+        // 打开流程发起操作
+        function openWFI(data) {
+            var tabUrl = '/WF/WorkFlowInstance/Process?flowid=' + data.FlowId;
+            if (data.FormType == 1) {
+                tabUrl = data.FormUrl;
+            }
+
+            // 打开一个新的选项卡
+            parent.layui.tab.addTabOnlyByElem("content", {
+                id: 'openProcess',
+                title: '【' + data.FormName + '】流程申请',
+                url: tabUrl,
+                close: true
+            });
+        }
+
+        // 点击(触发)查询
+        function clickSearch() {
+            document.getElementsByClassName("btn-search")[0].click();
+        }
+    </script>
+}
+<!-- 查询部分 -->
+<div class="layui-card search-card-hide">
+    <div class="layui-card-body">
+        <form class="layui-form">
+            <div class="layui-form-item">
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">流程名称</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="FlowName" autocomplete="off" maxlength="10" class="layui-input" />
+                    </div>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <button class="pear-btn pear-btn-md pear-btn-primary btn-search" lay-submit lay-filter="workFlowInstance-query">
+                        <i class="layui-icon layui-icon-search"></i>
+                        查询
+                    </button>
+                    <button type="reset" class="pear-btn pear-btn-md">
+                        <i class="layui-icon layui-icon-refresh"></i>
+                        重置
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 列表部分 -->
+<div class="layui-card">
+    <div class="layui-card-body">
+        <!-- start：流程分类 -->
+        <div class="tree-container">
+            <ul id="treeCategory" class="ztree"></ul>
+        </div>
+        <!-- end：流程分类 -->
+        <!-- start：表格部分 -->
+        <div class="table-container">
+            <table id="workFlowInstance_table" lay-filter="workFlowInstance-table"></table>
+        </div>
+        <!-- end：表格部分 -->
+        <div class="layui-clear"></div>
+    </div>
+</div>
+
+<!-- 数据表格操作部分 -->
+@await Component.InvokeAsync("Menu")
+
+<!-- 打开操作 -->
+<script type="text/html" id="workFlowInstance-bar">
+    <button class="pear-btn pear-btn-primary pear-btn-sm" lay-event="open"><i class="fa fa-code-fork"></i>&nbsp;打开</button>
+</script>

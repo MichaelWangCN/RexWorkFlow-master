@@ -1,0 +1,377 @@
+﻿@model WorkFlowDetailDto
+@{
+    ViewData["Title"] = "流程设计操作";
+    Layout = "~/Views/Shared/_LayoutContent.cshtml";
+}
+
+@section css {
+    <link href="~/src/js/zTree/css/bootstrapStyle/bootstrapStyle.css" rel="stylesheet" />
+    <link href="~/ui/js/gooflow/fonts/iconflow.css" rel="stylesheet" />
+    <link href="~/ui/js/gooflow/GooFlow.css" rel="stylesheet" />
+    <style type="text/css">
+        /* 当前样式 */
+        .layui-card-body {
+            height: 650px;
+        }
+
+        .input-category {
+            cursor: pointer;
+        }
+
+        .category-container, .category-container-form {
+            display: none;
+            height: 455px;
+            overflow-y: auto;
+        }
+
+        .btn-container {
+            margin: 10px auto;
+            text-align: center;
+        }
+
+        .flow-container {
+            width: 100%;
+        }
+
+        .flow-left {
+            width: 1150px;
+            min-height: 550px;
+            float: left;
+        }
+
+        .flow-right {
+            width: 400px;
+            min-height: 500px;
+            float: right;
+        }
+
+        .form_title {
+            padding: 8px;
+            background-color: #0E9AEF;
+            color: white;
+            text-align: left;
+        }
+
+    </style>
+}
+
+@section scripts {
+    <script src="~/src/js/zTree/js/jquery.min.js"></script>
+    <script src="~/src/js/zTree/js/jquery.ztree.core.js"></script>
+    <script src="~/src/js/zTree/js/jquery.ztree.excheck.js"></script>
+    <script src="~/src/js/zTree/js/jquery.ztree.exedit.js"></script>
+
+    <script src="~/ui/js/gooflow/GooFunc.js"></script>
+    <script src="~/ui/js/gooflow/GooFlow.js"></script>
+    <script src="~/ui/js/gooflow/GooFlow_color.js"></script>
+
+    <script src="~/src/sys/workFlow/js/operation.js" asp-append-version="true"></script>
+}
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form" action="javascript:void(0);">
+            <div class="layui-tab layui-tab-card">
+                <ul class="layui-tab-title">
+                    <li class="layui-this">基本信息</li>
+                    <li>流程设计</li>
+                </ul>
+                <div class="layui-tab-content">
+                    <div class="layui-tab-item layui-show">
+                        <!-- start：基本信息部分 -->
+                        <table class="table-form">
+                            <tr>
+                                <th>流程ID</th>
+                                <td>
+                                    <input type="text" name="FlowId" placeholder="系统自动生成" autocomplete="off" class="layui-input layui-btn-disabled" readonly="readonly" disabled="disabled" value="@Model.FlowId" />
+                                    <input type="hidden" name="FlowContent" value="@Model.FlowContent" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>流程编码</th>
+                                <td>
+                                    <input type="text" name="FlowCode" placeholder="系统自动生成" autocomplete="off" class="layui-input layui-btn-disabled" readonly="readonly" disabled="disabled" value="@Model.FlowCode" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>流程名称</th>
+                                <td>
+                                    <input type="text" name="FlowName" lay-verify="FlowName" placeholder="请输入流程名称" maxlength="20" autocomplete="off" class="layui-input" value="@Model.FlowName" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>流程分类</th>
+                                <td>
+                                    <input type="hidden" name="CategoryId" value="@Model.CategoryId" />
+                                    <input type="text" name="CategoryName" lay-verify="CategoryName" placeholder="请选择流程分类" title="点击选择流程分类" maxlength="20" autocomplete="off" class="layui-input input-category" readonly="readonly" value="@Model.CategoryName" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>关联表单</th>
+                                <td>
+                                    <input type="hidden" name="FormId" value="@Model.FormId" />
+                                    <input type="text" name="FormName" lay-verify="FormName" placeholder="请选择关联表单" title="点击选择关联表单" maxlength="20" autocomplete="off" class="layui-input input-form" readonly="readonly" value="@Model.FormName" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>流程版本</th>
+                                <td>
+                                    <input type="text" name="FlowVersion" lay-verify="FlowVersion" placeholder="请输入流程版本" maxlength="20" autocomplete="off" class="layui-input" readonly="readonly" value="@Model.FlowVersion" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>备注</th>
+                                <td>
+                                    <textarea placeholder="请输入备注" name="Memo" class="layui-textarea memo-textarea">@Model.Memo</textarea>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>状态</th>
+                                <td>
+                                    <input type="checkbox" name="Enable" lay-skin="primary" @(Model.Enable == 1 ? "checked=\"checked\"" : "") />
+                                </td>
+                            </tr>
+                        </table>
+                        <!-- end：基本信息部分 -->
+                    </div>
+                    <div class="layui-tab-item">
+                        <!-- start：流程设计部分 -->
+                        <div class="flow-container">
+                            <div class="flow-left">
+                                <div id="workflowpanel"></div>
+                            </div>
+                            <div class="flow-right">
+                                <div class="form_title">属性查看</div>
+                                <table class="table-form table-flow">
+                                    <tr>
+                                        <th>Id:</th>
+                                        <td>
+                                            <input type="text" id="ele_id" autocomplete="off" class="layui-input" readonly="readonly" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Name:</th>
+                                        <td>
+                                            <input type="text" id="ele_name" autocomplete="off" class="layui-input" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Type:</th>
+                                        <td>
+                                            <input type="text" id="ele_type" autocomplete="off" class="layui-input" readonly="readonly" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Model:</th>
+                                        <td>
+                                            <input type="text" id="ele_model" autocomplete="off" class="layui-input" readonly="readonly" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>From:</th>
+                                        <td>
+                                            <input type="text" id="ele_from" autocomplete="off" class="layui-input" readonly="readonly" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>To:</th>
+                                        <td>
+                                            <input type="text" id="ele_to" autocomplete="off" class="layui-input" readonly="readonly" />
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <div id="mynodeeventtitle" style="display:none" class="form_title">任务节点事件</div>
+                                <div id="mynodeeventcontent" style="display:none" class="form_content">
+                                    <table class="table-form">
+                                        <tr>
+                                            <th>执行人</th>
+                                            <td>
+                                                <select name="NodeDesignate" id="NodeDesignate" lay-filter="form-NodeDesignate">
+                                                    <option value="SPECIAL_USER">指定用户</option>
+                                                    <option value="SPECIAL_ROLE">指定角色</option>
+                                                    <option value="SQL">SQL自动获取</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr id="selectuserbox">
+                                            <th>选择用户</th>
+                                            <td>
+                                                <input type="hidden" />
+                                                <textarea readonly title="选择用户"></textarea>
+                                                <a id="selectuserpage">选择</a>
+                                            </td>
+                                        </tr>
+                                        <tr style="display:none" id="selectrolebox">
+                                            <th>选择角色</th>
+                                            <td>
+                                                <input type="hidden" />
+                                                <textarea readonly title="选择角色"></textarea><a id="selectroletrees">选择</a>
+                                            </td>
+                                        </tr>
+                                        <tr style="display:none" id="selectsqlcode">
+                                            <th>SQL标识</th>
+                                            <td>
+                                                <textarea style="width:150px;min-height:100px;cursor:auto"></textarea>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div id="mynodechattitle" style="display:none" class="form_title">会签节点事件</div>
+                                <div id="mynodechatcontent" style="display:none" class="form_content">
+                                    <table class="table-form">
+                                        <tr>
+                                            <th>会签类型</th>
+                                            <td>
+                                                <select name="ChatType" id="ChatType" lay-filter="form-ChatType">
+                                                    @foreach (var item in Enum<ChatType>.AsEnumerable())
+                                                    {
+                                                        <option value="@((int)item)">@item.GetDescription()</option>
+}
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>并行计算方式</th>
+                                            <td>
+                                                <select id="ChatParallelCalcType" name="ChatParallelCalcType">
+                                                    @foreach (var item in Enum<ChatParallelCalcType>.AsEnumerable())
+                                                    {
+                                                        <option value="@((int)item)">@item.GetDescription()</option>
+}
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>会签人选</th>
+                                            <td>
+                                                <input type="hidden" />
+                                                <textarea readonly title="选择用户"></textarea>
+                                                <a id="selectchatusertrees">选择</a>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div id="mylineeventtitle" style="display:none" class="form_title">连线节点事件</div>
+                                <div id="mylineeventcontent" style="display:none" class="form_content">
+                                    <table class="table-form">
+                                        <tr id="selectlinebox">
+                                            <th>SQL判断</th>
+                                            <td>
+                                                <textarea style="width:150px;min-height:100px;cursor:auto"></textarea>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div id="myviewtitle" style="display:none" class="form_title">通知节点事件</div>
+                                <div id="myviewcontent" style="display:none" class="form_content">
+                                    <table class="table-form">
+                                        <tr>
+                                            <th>执行人</th>
+                                            <td>
+                                                <select name="NodeDesignate" id="NodeViewDesignate" lay-filter="form-NodeViewDesignate">
+                                                    <option value="CREATEUSER">流程发起人</option>
+                                                    <option value="SPECIAL_USER">指定用户</option>
+                                                    <option value="SPECIAL_ROLE">指定角色</option>
+                                                    <option value="SQL">SQL自动获取</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr id="selectviewuserbox">
+                                            <th>选择用户</th>
+                                            <td>
+                                                <input type="hidden" />
+                                                <textarea readonly title="选择用户"></textarea>
+                                                <a id="selectviewuserpage">选择</a>
+                                            </td>
+                                        </tr>
+                                        <tr style="display:none" id="selectviewrolebox">
+                                            <th>选择角色</th>
+                                            <td>
+                                                <input type="hidden" />
+                                                <textarea readonly title="选择角色"></textarea><a id="selectviewroletrees">选择</a>
+                                            </td>
+                                        </tr>
+                                        <tr style="display:none" id="selectviewsqlcode">
+                                            <th>SQL标识</th>
+                                            <td>
+                                                <textarea style="width:150px;min-height:100px;cursor:auto"></textarea>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div style="margin: 5px 0 0;text-align: center;">
+                                    <input type="button" class="pear-btn pear-btn-primary pear-btn-sm" value="确定" id="savenodeprop" />
+                                </div>
+
+                            </div>
+                            <div class="layui-clear"></div>
+                        </div>
+                        <!-- end：流程设计部分 -->
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 关联表单选择部分 -->
+<div class="category-container-form">
+    <ul id="treeForm" class="ztree"></ul>
+</div>
+
+<!-- 关联流程分类 -->
+<div class="category-container">
+    <ul id="treeCategory" class="ztree"></ul>
+</div>
+
+<!-- Tree -->
+<div class="tree-container">
+    <div class="row m10" style="display: none" id="categorybox">
+        <div class="navbar-fixed-top mt40 p5">
+            <button type="button" class="pear-btn pear-btn-primary pear-btn-sm" id="savecategory"><i class="fa fa-save"><span class="ml5">保存</span></i></button>
+        </div>
+        <div class="mt30 ztree" id="categoryTree"></div>
+    </div>
+    <div class="row m10" style="display: none" id="formbox">
+        <div class="navbar-fixed-top mt40 p5">
+            <button type="button" class="pear-btn pear-btn-primary pear-btn-sm" id="saveformtree"><i class="fa fa-save"><span class="ml5">保存</span></i></button>
+        </div>
+        <div class="mt30 ztree" id="formTree"></div>
+    </div>
+    <div class="row m10" style="display: none" id="roles">
+        <div class="navbar-fixed-top mt40 p5">
+            <button type="button" class="pear-btn pear-btn-primary pear-btn-sm" id="saveroles"><i class="fa fa-save"><span class="ml5">保存</span></i></button>
+        </div>
+        <div class="mt30 ztree" id="rolesTree"></div>
+    </div>
+    <div class="row m10" style="display: none" id="users">
+        <div class="navbar-fixed-top mt40 p5">
+            <button type="button" class="pear-btn pear-btn-primary pear-btn-sm" id="saveusers"><i class="fa fa-save"><span class="ml5">保存</span></i></button>
+        </div>
+        <div class="mt30 ztree" id="usersTree"></div>
+    </div>
+    <div class="row m10" style="display: none" id="viewroles">
+        <div class="navbar-fixed-top mt40 p5">
+            <button type="button" class="pear-btn pear-btn-primary pear-btn-sm" id="saveviewroles"><i class="fa fa-save"><span class="ml5">保存</span></i></button>
+        </div>
+        <div class="mt30 ztree" id="viewrolesTree"></div>
+    </div>
+    <div class="row m10" style="display: none" id="viewusers">
+        <div class="navbar-fixed-top mt40 p5">
+            <button type="button" class="pear-btn pear-btn-primary pear-btn-sm" id="saveviewusers"><i class="fa fa-save"><span class="ml5">保存</span></i></button>
+        </div>
+        <div class="mt30 ztree" id="viewusersTree"></div>
+    </div>
+    <div class="row m10" style="display: none" id="chatusers">
+        <div class="navbar-fixed-top mt40 p5">
+            <button type="button" class="pear-btn pear-btn-primary pear-btn-sm" id="savechatusers"><i class="fa fa-save"><span class="ml5">保存</span></i></button>
+        </div>
+        <div class="mt30 ztree" id="chatusersTree"></div>
+    </div>
+</div>
+
+<!-- 操作按钮部分 -->
+<div class="btn-container">
+    <!-- 加载操作按钮 -->
+    @await Component.InvokeAsync("Menu", true)
+</div>

@@ -1,0 +1,60 @@
+﻿@model SysSystem
+@{
+    ViewData["Title"] = "系统操作";
+    Layout = "~/Views/Shared/_LayoutContent.cshtml";
+}
+
+@section css {
+    <style type="text/css">
+        /* 当前样式 */
+        .memo-textarea {
+            resize: none;
+            height: 100px;
+        }
+    </style>
+}
+
+@section scripts {
+    <script src="~/src/sys/system/js/operation.js" asp-append-version="true"></script>
+}
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form" action="javascript:void(0);">
+            <table class="table-form">
+                <tr>
+                    <th>系统名称</th>
+                    <td>
+                        <input type="text" name="SystemName" lay-verify="SystemName" placeholder="请输入系统名称" maxlength="20" autocomplete="off" class="layui-input" value="@Model.SystemName" />
+                    </td>
+                </tr>
+                <tr>
+                    <th>排序</th>
+                    <td>
+                        <input type="number" min="0" max="1000" name="Sort" lay-verify="Sort" placeholder="请输入排序" autocomplete="off" class="layui-input" value="@Model.Sort" />
+                    </td>
+                </tr>
+                <tr>
+                    <th>备注</th>
+                    <td>
+                        <textarea placeholder="请输入备注" name="Memo" class="layui-textarea memo-textarea">@Model.Memo</textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <th>账号状态</th>
+                    <td>
+                        <input type="checkbox" name="IsDel" lay-skin="primary" @(Model.IsDel == 0 ? "checked=\"checked\"" : "") />
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: center">
+                        <input type="hidden" name="CreateTime" />
+                        <input type="hidden" name="SystemId" value="@Model.SystemId" />
+                        <!-- 加载操作按钮 -->
+                        @await Component.InvokeAsync("Menu", true)
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+

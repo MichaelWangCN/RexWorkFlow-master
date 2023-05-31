@@ -1,0 +1,295 @@
+﻿@{
+    ViewData["Title"] = "流程设计";
+    Layout = "~/Views/Shared/_LayoutContent.cshtml";
+}
+
+@section css {
+    <style type="text/css">
+        .search-card-hide {
+            display: none !important;
+        }
+
+        .hot {
+            font-style: normal;
+            position: relative;
+        }
+
+            .hot:after {
+                background-color: red;
+                border-radius: 3px;
+                color: #fff;
+                content: "hot";
+                font-size: 10px;
+                line-height: 1;
+                padding: 1px 3px;
+                position: absolute;
+                right: 0px;
+                top: 2px;
+            }
+    </style>
+}
+@section scripts {
+    <script type="text/javascript">
+        layui.use(['table', 'form', 'jquery'], function () {
+            let table = layui.table;
+            let form = layui.form;
+            let $ = layui.jquery;
+
+            let cols = [
+                [
+                    //{ type: 'checkbox' },
+                    {
+                        templet: "#checkFlow",
+                        title: "<input type='checkbox' name='flow_all' title='' lay-skin='primary' lay-filter='flow-all'> ",
+                        align: 'center',
+                        width: 60
+                    },
+                    { field: 'FlowId', width: 280, align: 'left', title: '流程ID' },
+                    { field: 'FlowCode', width: 200, align: 'left', title: '流程编号' },
+                    { field: 'FlowName', width: 200, align: 'left', title: '流程名称' },
+                    { field: 'Memo', align: 'left', title: '流程备注' },
+                    { field: 'FlowVersion', width: 180, align: 'center', title: '流程版本', templet: '#workFlow_flowVersion' },
+                    { field: 'Enable', width: 80, align: 'center', title: '状态', templet: '#workFlow_enable' },
+                    { field: 'CreateTime', width: 200, align: 'center', title: '创建时间', templet: '#workFlow_createTime' }
+                ]
+            ];
+
+            // 数据表格渲染
+            table.render({
+                elem: '#workFlow_table',
+                url: '/WF/WorkFlow/FindWorkFlowPage',
+                request: {
+                    pageName: 'PageIndex', //页码的参数名称，默认：page
+                    limitName: 'PageSize' //每页数据量的参数名，默认：limit
+                },
+                page: true,
+                cols: cols,
+                skin: 'line',
+                toolbar: '#oper-toolbar',
+                defaultToolbar: [{
+                    layEvent: 'refresh',
+                    icon: 'layui-icon-refresh',
+                }, 'filter', 'print', 'exports'],
+                done: function (res, curr, count) {
+                    // 加载完成！
+                }
+            });
+
+            // 全选
+            form.on("checkbox(flow-all)", function () {
+                var status = $(this).prop("checked");
+                $.each($("input[name=FlowId]"), function (i, value) {
+                    $(this).prop("checked", status);
+                });
+                // 重新渲染复选框
+                form.render('checkbox');
+            });
+
+            // 工具栏操作
+            table.on('toolbar(workFlow-table)', function (obj) {
+                //let dataTable = table.checkStatus(obj.config.id).data;
+                let dataTable = new Array();
+                var flowIdObj = document.getElementsByName("FlowId");
+                for (var i = 0; i < flowIdObj.length; i++) {
+                    if (flowIdObj[i].checked) {
+                        dataTable.push({
+                            'FlowId': flowIdObj[i].value
+                        });
+                    }
+                }
+                switch (obj.event) {
+                    case "refresh": // 刷新数据表格
+                        table.reload('workFlow_table');
+                        break;
+                    case "WorkFlow_Index_2": // 新增
+                        openOperation("");
+                        break;
+                    case "WorkFlow_Index_3": // 编辑
+                        if (dataTable.length < 1) {
+                            layer.msg("您尚未选择要编辑的数据！", { icon: 5 });
+                        } else if (dataTable.length > 1) {
+                            layer.msg("请选择一条数据进行编辑！", { icon: 5 });
+                        } else {
+                            openOperation(dataTable[0].FlowId);
+                        }
+                        break;
+                    case "WorkFlow_Index_4": // 删除
+                        if (dataTable.length < 1) {
+                            layer.msg("您尚未选择要删除的数据！", { icon: 5 });
+                            return;
+                        }
+                        layer.confirm('您选择了' + dataTable.length + '条数据，确认要删除吗？', { icon: 3, btnAlign: 'c', title: '提示' }, function (index) {
+                            var dIds = new Array();
+                            for (var i = 0; i < dataTable.length; i++) {
+                                dIds.push(dataTable[i].FlowId);
+                            }
+                            delWorkFlow(dIds);
+                        });
+                        break;
+                    case "WorkFlow_Index_9": // 新建版本
+                        if (dataTable.length < 1) {
+                            layer.msg("您尚未选择要【新建版本】的数据！", { icon: 5 });
+                        } else if (dataTable.length > 1) {
+                            layer.msg("请选择一条【新建版本】的数据！", { icon: 5 });
+                        } else {
+                            layer.confirm('确认要创建新的版本吗？新的版本将覆盖之前版本，但正在运行中的流程不受影响。', { icon: 3, btnAlign: 'c', title: '提示' }, function (index) {
+                                oprVersions(dataTable[0].FlowId);
+                            });
+                        }
+                        break;
+                    default:
+                }
+            });
+
+            // 创建新版本
+            function oprVersions(id) {
+                var param = {
+                    'FlowId': id
+                };
+                $.ajax({
+                    url: '/WF/WorkFlow/NewVersionAsync',
+                    type: 'POST',
+                    data: JSON.stringify(param),
+                    dataType: 'json',
+                    contentType: 'application/json;charset=utf-8',
+                    beforeSend: function () {
+                        layer.load(1);
+                    },
+                    success: function (res) {
+                        layer.closeAll('loading');
+                        if (res) {
+                            layer.msg("新建版本成功！", { icon: 1 }, function () {
+                                clickSearch();
+                            });
+                            return;
+                        }
+                        layer.msg("新建版本失败！", { icon: 5 });
+                    },
+                    error: function (data) {
+                        layer.closeAll('loading');
+                        console.error(data.responseText);
+                    }
+                });
+            }
+
+            // 删除流程设计信息
+            function delWorkFlow(ids) {
+                var param = {
+                    'Ids': ids
+                };
+                $.ajax({
+                    url: '/WF/WorkFlow/DeleteAsync',
+                    type: 'POST',
+                    data: JSON.stringify(param),
+                    dataType: 'json',
+                    contentType: 'application/json;charset=utf-8',
+                    beforeSend: function () {
+                        layer.load(1);
+                    },
+                    success: function (res) {
+                        layer.closeAll('loading');
+                        if (res) {
+                            layer.msg("删除成功！", { icon: 1 }, function () {
+                                clickSearch();
+                            });
+                            return;
+                        }
+                        layer.msg("删除失败！", { icon: 5 });
+                    },
+                    error: function (data) {
+                        layer.closeAll('loading');
+                        console.error(data.responseText);
+                    }
+                });
+            }
+
+            // 打开用户操作(新增|修改)
+            function openOperation(id) {
+                // 打开一个新的选项卡
+                parent.layui.tab.addTabOnlyByElem("content", {
+                    id: layui.util.isEmpty(id) ? 'addFlow' : 'editFlow',
+                    title: layui.util.isEmpty(id) ? '新增流程' : '编辑流程',
+                    url: '/WF/WorkFlow/Operation?id=' + id,
+                    close: true
+                });
+            }
+
+            // 查询(提交)
+            form.on('submit(workFlow-query)', function (data) {
+                table.reload('workFlow_table');
+                return false;
+            });
+
+        });
+
+        // 点击(触发)查询
+        function clickSearch() {
+            document.getElementsByClassName("btn-search")[0].click();
+        }
+    </script>
+}
+<!-- 查询部分 -->
+<div class="layui-card search-card-hide">
+    <div class="layui-card-body">
+        <form class="layui-form">
+            <div class="layui-form-item">
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">流程名称</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="FlowName" autocomplete="off" maxlength="10" class="layui-input" />
+                    </div>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <button class="pear-btn pear-btn-md pear-btn-primary btn-search" lay-submit lay-filter="workFlow-query">
+                        <i class="layui-icon layui-icon-search"></i>
+                        查询
+                    </button>
+                    <button type="reset" class="pear-btn pear-btn-md">
+                        <i class="layui-icon layui-icon-refresh"></i>
+                        重置
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 列表部分 -->
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="workFlow_table" lay-filter="workFlow-table"></table>
+    </div>
+</div>
+
+<!-- 数据表格操作部分 -->
+@await Component.InvokeAsync("Menu")
+
+<!-- 操作按钮 -->
+<script type="text/html" id="checkFlow">
+    {{#  if (d.IsOld !== 1){ }}
+    <input type="checkbox" name="FlowId" title="" lay-skin="primary" value="{{ d.FlowId }}">
+    {{#  } }}
+</script>
+
+<!-- 流程版本 -->
+<script type="text/html" id="workFlow_flowVersion">
+    {{#if (d.IsOld == 1) { }}
+    <span class="gray"><i class="fa fa-ban"></i>旧版：{{ d.FlowVersion }}</span>
+    {{# }else{ }}
+    <span><i class="hot"></i>最新版</span>
+    {{# } }}
+</script>
+
+<!-- 状态 -->
+<script type="text/html" id="workFlow_enable">
+    {{#if (d.Enable == 1) { }}
+    <span title="可用" class="fa fa-check green"></span>
+    {{# }else{ }}
+    <span title="不可用" class="fa fa-trash red"></span>
+    {{# } }}
+</script>
+
+<!-- 日期格式化 -->
+<script type="text/html" id="workFlow_createTime">
+    {{layui.util.toDateString(d.CreateTime * 1000, 'yyyy-MM-dd HH:mm')}}
+</script>

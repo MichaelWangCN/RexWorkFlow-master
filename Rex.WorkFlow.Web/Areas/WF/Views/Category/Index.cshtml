@@ -1,0 +1,206 @@
+﻿@{
+    ViewData["Title"] = "流程分类管理";
+    Layout = "~/Views/Shared/_LayoutContent.cshtml";
+}
+
+@section css {
+    <style type="text/css">
+        .search-card-hide {
+            display: none !important;
+        }
+    </style>
+}
+@section scripts {
+    <script type="text/javascript">
+        layui.use(['table', 'form', 'jquery'], function () {
+            let table = layui.table;
+            let form = layui.form;
+            let $ = layui.jquery;
+
+            let cols = [
+                [
+                    { type: 'checkbox' },
+                    { field: 'Name', width: 200, align: 'center', title: '分类名称' },
+                    { field: 'Memo', title: '备注' },
+                    { field: 'Status', title: '状态', align: 'center', width: 80, templet: '#category_enable' },
+                    { field: 'CreateTime', width: 200, align: 'center', title: '创建时间', templet: '#category_createTime' }
+                ]
+            ];
+
+            // 数据表格渲染
+            table.render({
+                elem: '#category_table',
+                url: '/WF/Category/FindCategoryPage',
+                request: {
+                    pageName: 'PageIndex', //页码的参数名称，默认：page
+                    limitName: 'PageSize' //每页数据量的参数名，默认：limit
+                },
+                page: false,
+                cols: cols,
+                skin: 'line',
+                toolbar: '#oper-toolbar',
+                defaultToolbar: [{
+                    layEvent: 'refresh',
+                    icon: 'layui-icon-refresh',
+                }, 'filter', 'print', 'exports']
+            });
+            
+            // 工具栏操作
+            table.on('toolbar(category-table)', function (obj) {
+                let dataTable = table.checkStatus(obj.config.id).data;
+                switch (obj.event) {
+                    case "refresh": // 刷新数据表格
+                        table.reload('category_table');
+                        break;
+                    case "Category_Index_2": // 新增
+                        openOperation("");
+                        break;
+                    case "Category_Index_3": // 编辑
+                        if (dataTable.length < 1) {
+                            layer.msg("您尚未选择要编辑的数据！", { icon: 5 });
+                        } else if (dataTable.length > 1) {
+                            layer.msg("请选择一条数据进行编辑！", { icon: 5 });
+                        } else {
+                            openOperation(dataTable[0].Id);
+                        }
+                        break;
+                    case "Category_Index_4": // 删除
+                        if (dataTable.length < 1) {
+                            layer.msg("您尚未选择要删除的数据！", { icon: 5 });
+                            return;
+                        }
+                        layer.confirm('您选择了' + dataTable.length + '条数据，确认要删除吗？', { icon: 3, btnAlign: 'c', title: '提示' }, function (index) {
+                            var dIds = new Array();
+                            for (var i = 0; i < dataTable.length; i++) {
+                                dIds.push(dataTable[i].Id);
+                            }
+                            delCategory(dIds);
+                        });
+                        break;
+                    case "expandAll": // 展开
+                        treetable.expandAll("#category_table");
+                        break;
+                    case "foldAll": // 折叠
+                        treetable.foldAll("#category_table");
+                        break;
+                    default:
+                }
+            });
+
+            // 删除流程分类信息
+            function delCategory(ids) {
+                var param = {
+                    'Ids': ids,
+                    'UserId': ""
+                }
+                $.ajax({
+                    url: '/WF/Category/Delete',
+                    type: 'POST',
+                    data: JSON.stringify(param),
+                    dataType: 'json',
+                    contentType: 'application/json;charset=utf-8',
+                    beforeSend: function () {
+                        layer.load(1);
+                    },
+                    success: function (res) {
+                        layer.closeAll('loading');
+                        if (res.code === 0) {
+                            layer.msg(res.msg, { icon: 1 }, function () {
+                                clickSearch();
+                            });
+                            return;
+                        }
+                        layer.msg(res.msg, { icon: 5 });
+                    },
+                    error: function (data) {
+                        layer.closeAll('loading');
+                        console.error(data.responseText);
+                    }
+                });
+            }
+
+            // 打开用户操作(新增|修改)
+            function openOperation(id) {
+                layer.open({
+                    type: 2,
+                    title: layui.util.isEmpty(id) ? '新增流程分类' : '编辑流程分类',
+                    shade: 0.1,
+                    offset: '100px',
+                    area: ['500px', '410px'],
+                    content: '/WF/Category/Operation?id=' + id
+                });
+            }
+
+            // 查询(提交)
+            form.on('submit(category-query)', function (data) {
+                table.reload('category_table');
+                return false;
+            });
+
+        });
+
+        // 点击(触发)查询
+        function clickSearch() {
+            document.getElementsByClassName("btn-search")[0].click();
+        }
+    </script>
+}
+<!-- 查询部分 -->
+<div class="layui-card search-card-hide">
+    <div class="layui-card-body">
+        <form class="layui-form">
+            <div class="layui-form-item">
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">分类名称</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="Name" autocomplete="off" maxlength="10" class="layui-input" />
+                    </div>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">状态</label>
+                    <div class="layui-input-inline" style="width: 100px">
+                        <select name="Status">
+                            <option value="">-请选择-</option>
+                            <option value="1" selected="selected">可用</option>
+                            <option value="0">不可用</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <button class="pear-btn pear-btn-md pear-btn-primary btn-search" lay-submit lay-filter="category-query">
+                        <i class="layui-icon layui-icon-search"></i>
+                        查询
+                    </button>
+                    <button type="reset" class="pear-btn pear-btn-md">
+                        <i class="layui-icon layui-icon-refresh"></i>
+                        重置
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 列表部分 -->
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="category_table" lay-filter="category-table"></table>
+    </div>
+</div>
+
+<!-- 数据表格操作部分 -->
+@await Component.InvokeAsync("Menu")
+
+<!-- 状态 -->
+<script type="text/html" id="category_enable">
+    {{#if (d.Status == 1) { }}
+    <span title="可用" class="fa fa-check green"></span>
+    {{# }else{ }}
+    <span title="已删除" class="fa fa-trash red"></span>
+    {{# } }}
+</script>
+
+<!-- 日期格式化 -->
+<script type="text/html" id="category_createTime">
+    {{layui.util.toDateString(d.CreateTime * 1000, 'yyyy-MM-dd HH:mm')}}
+</script>

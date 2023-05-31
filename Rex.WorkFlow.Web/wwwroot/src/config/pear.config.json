@@ -1,0 +1,55 @@
+{
+	"logo": {
+		"title": "★工作流平台★",
+		"image": "/ui/images/logo.png"
+	},
+	"menu": {
+		"data": "/Sys/Resource/TreeMenu",
+		"accordion": true,
+		"control": false,
+		"select": ""
+	},
+	"tab": {
+		"muiltTab": true,
+		"keepState": true,
+		"tabMax": 30,
+		"index": {
+			"id": "0",
+			"href": "/Home/Default",
+			"title": "首页"
+		}
+	},
+	"theme": {
+		"defaultColor": "3",
+		"defaultMenu": "light-theme",
+		"allowCustom": true
+	},
+	"colors": [{
+			"id": "1",
+			"color": "#FF5722"
+		},
+		{
+			"id": "2",
+			"color": "#5FB878"
+		},
+		{
+			"id": "3",
+			"color": "#1E9FFF"
+		}, {
+			"id": "4",
+			"color": "#FFB800"
+		}, {
+			"id": "5",
+			"color": "darkgray"
+		}
+	],
+	"links": [{
+			"icon": "layui-icon layui-icon-website",
+			"title": "鸣谢【Pear Admin】",
+			"href": "http://www.pearadmin.com"
+		}
+	],
+	"other": {
+		"keepLoad": 1200
+	}
+}

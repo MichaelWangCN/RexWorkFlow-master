@@ -1,0 +1,216 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "工作流平台";
+}
+
+@section css {
+    <style type="text/css">
+        @@keyframes flickerAnimation {
+            0% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .msg-count {
+            animation: flickerAnimation 1s infinite;
+            color: #FF5722 !important;
+        }
+
+        .msg-container {
+            padding: 5px 15px;
+            max-height: 340px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .a-title {
+            color: #23527c;
+        }
+
+            .a-title:hover {
+                cursor: pointer;
+                color: #23527c;
+                text-decoration: underline;
+            }
+    </style>
+}
+
+@section scripts {
+    <script src="~/src/js/zTree/js/jquery.min.js"></script>
+    <script src="~/lib/signalr/dist/browser/signalr.js"></script>
+    <script type="text/javascript">
+        var openMsgIndex;
+        layui.use(['layer', 'jquery'], function () {
+            var layer = layui.layer;
+            let $ = layui.jquery;
+
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/messageHub", {
+                    transport: signalR.HttpTransportType.LongPolling
+                }).build();
+            function getLocalTime(nS) {
+                return new Date(parseInt(nS) * 1000).toLocaleString().replace(/:\d{1,2}$/, ' ');
+            }
+            connection.on("ReceiveMessage", function (data) {
+                debugger;
+                if (data.isSystem != 1) {
+                    data.isSystem = 0;
+                    data.link = '';
+                }
+                fillMsg(data);
+            });
+            connection.start().then(function () {
+                debugger;
+                var uId = $('#img_user').attr("data-user_id");
+                connection.invoke('InitMessage', uId);
+                //connection.invoke('InitMessage', 1);
+            }).catch(function (err) {
+                return console.error(err.toString());
+            });
+            connection.on("ReceiveAnyOne", data => {
+                debugger;
+            });
+
+            function fillMsg(data) {
+                debugger
+                var strHtml = '<tr>';
+                strHtml += '        <td>';
+                strHtml += '            <a href="javascript:;" class="a-title a-list-msg" data-id="' + data.id + '" data-issystem="' + data.isSystem + '" data-link="' + data.link + '">' + data.title + '</a>';
+                strHtml += '        </td>';
+                strHtml += '        <td>' + unixToDate(data.createTime) + '</td>';
+                strHtml += '    </tr>';
+                $('#tb_msg tr').last().after(strHtml);
+                var msgCount = Number($('.msg-notice').attr("data-count")) + 1;
+                $('.msg-notice').attr("data-count", msgCount);
+                $('.msg-notice').attr("title", "您共有" + msgCount + "条消息待处理！");
+                if (msgCount > 0) {
+                    $('.msg-notice').removeClass("msg-count").addClass("msg-count");
+                }
+                clickMsgList();
+            }
+
+            // 消息点击事件
+            $('.msg-notice').on('click', function () {
+                var count = Number($(this).attr("data-count"));
+                if (count < 1) {
+                    layer.msg("您尚未有待处理的消息！", { icon: 1 });
+                    return;
+                }
+
+                // 打开【待处理】通知消息
+                openMsgIndex = layer.open({
+                    type: 1,
+                    title: '<i class="layui-icon layui-icon-notice"></i>&nbsp;查看通知消息',
+                    shade: 0.1,
+                    offset: '120px',
+                    area: ['650px', '400px'],
+                    content: $('.msg-container'),
+                    success: function (layero, index) {
+                        $('.msg-container').show();
+                    },
+                    cancel: function (index) {
+                        $('.msg-container').hide();
+                    }
+                });
+
+            });
+
+            // 列表消息点击事件
+            function clickMsgList() {
+                $('.a-list-msg').unbind("click");
+                $('.a-list-msg').on('click', function () {
+                    var link = $(this).attr('data-link');
+                    var messageid = $(this).attr('data-id');
+                    removeMsg(messageid);
+                    var count = Number($('.msg-count').attr("data-count")) - 1;
+                    if (count < 1) {
+                        $('.msg-count').removeClass("msg-count");
+                    }
+                    window.open(link);
+                });
+            }
+
+            // 移除消息
+            function removeMsg(messageid) {
+                var model = {
+                    'MessageId': messageid
+                };
+                $.ajax({
+                    url: '/OA/Message/ReadMessageAsync',
+                    type: 'POST',
+                    data: JSON.stringify(model),
+                    dataType: 'json',
+                    contentType: 'application/json;charset=utf-8',
+                    beforeSend: function () {
+                        layer.load(1);
+                    },
+                    success: function (res) {
+                        layer.closeAll('loading');
+                        if (res) {
+                            layer.close(openMsgIndex);
+                            return;
+                        }
+                        layer.msg("消息移除失败！", { icon: 5 });
+                    },
+                    error: function (data) {
+                        layer.closeAll('loading');
+                        console.error(data.responseText);
+                    }
+                });
+            }
+
+            // 基本信息
+            $('.a-user-info').on('click', function () {
+                layer.msg("该作者太忙，没时间做！", { icon: 1 });
+            });
+
+            // 注销登录
+            $('.a-logout').on('click', function () {
+                layer.confirm('您确定要注销登录吗?', { icon: 3, title: '提示', btnAlign: 'c' }, function (index) {
+                    window.top.location.href = '/Sys/User/LogOut';
+                    layer.close(index);
+                });
+            });
+
+            clickMsgList();
+
+        });
+
+        // 日期转换
+        function unixToDate(value) {
+            var now = new Date(Number(value) * 1000);
+            var year = now.getFullYear();  //取得4位数的年份
+            var month = now.getMonth() + 1;  //取得日期中的月份，其中0表示1月，11表示12月
+            var date = now.getDate();      //返回日期月份中的天数（1到31）
+            var hour = now.getHours();     //返回日期中的小时数（0到23）
+            var minute = now.getMinutes(); //返回日期中的分钟数（0到59）
+            //var second = now.getSeconds(); //返回日期中的秒数（0到59）
+            return year + "-" + (month < 10 ? "0" + month : month) + "-" + (date < 10 ? "0" + date : date) + " " + hour + ":" + minute;
+        }
+    </script>
+}
+
+<!-- 顶部导航菜单区域 -->
+@await Component.InvokeAsync("TopMenu")
+
+<!-- 侧 边 区 域 -->
+<div class="layui-side layui-bg-black">
+    <!-- 顶 部 图 标 -->
+    <div class="layui-logo">
+        <img class="logo" />
+        <span class="title"></span>
+    </div>
+    <!-- 侧 边 菜 单 -->
+    <div class="layui-side-scroll">
+        <div id="sideMenu"></div>
+    </div>
+</div>
+
+<!-- 视 图 页 面 -->
+<div class="layui-body">
+    <div id="content"></div>
+</div>

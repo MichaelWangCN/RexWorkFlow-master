@@ -1,0 +1,57 @@
+﻿@model UserIdentity
+
+@{ var messagePage = ViewBag.MessagePage as Page<Rex.WorkFlow.Web.Models.OaMessageMyList>; }
+
+<div class="layui-header">
+    <!-- 顶 部 左 侧 功 能 -->
+    <ul class="layui-nav layui-layout-left">
+        <li class="collaspe layui-nav-item"><a href="#" class="layui-icon layui-icon-shrink-right"></a></li>
+        <li class="refresh layui-nav-item"><a href="#" class="layui-icon layui-icon-refresh-1" loading=600></a></li>
+    </ul>
+    <!-- 顶 部 右 侧 菜 单 -->
+    <div id="control" class="layui-layout-control"></div>
+    <ul class="layui-nav layui-layout-right">
+        <li class="layui-nav-item layui-hide-xs"><a href="#" class="fullScreen layui-icon layui-icon-screen-full"></a></li>
+        <li class="layui-nav-item layui-hide-xs"><a href="https://gitee.com/zhuyongzhengs/RexWorkFlow" title="项目源码" target="_blank" class="layui-icon layui-icon-website"></a></li>
+        <li class="layui-nav-item layui-hide-xs">
+            <a href="javascript:;" data-count="@messagePage.TotalItems" title="@($"您共有{ messagePage.TotalItems }条消息待处理！")" class="@(messagePage.TotalItems > 0 ? "msg-count" : "") layui-icon layui-icon-notice msg-notice"></a>
+        </li>
+        <li class="layui-nav-item">
+            <!-- 头 像 -->
+            <a href="javascript:;">
+                <img id="img_user" src="@Model.HeadImg" data-user_id="@Model.UserId" class="layui-nav-img" />
+                @Model.UserName
+            </a>
+            <!-- 功 能 菜 单 -->
+            <dl class="layui-nav-child">
+                <dd><a class="a-user-info">基本资料</a></dd>
+                <dd><a class="a-logout" href="javascript:;">注销登录</a></dd>
+            </dl>
+        </li>
+        <li class="layui-nav-item setting"><a href="#" class="layui-icon layui-icon-more-vertical"></a></li>
+    </ul>
+</div>
+
+<!-- start：待处理消息数量 -->
+<div class="msg-container">
+    <table class="layui-table">
+        <thead>
+            <tr>
+                <th>标题</th>
+                <th style="width: 120px">时间</th>
+            </tr>
+        </thead>
+        <tbody id="tb_msg">
+           @foreach (var item in messagePage.Items)
+            {
+                <tr>
+                    <td>
+                        <a href="javascript:;" class="a-title a-list-msg" data-id="@item.Id" data-type="@item.MsgType" data-link="@item.Link">@item.Title</a>
+                    </td>
+                    <td>@item.CreateTime.ToDateTime().ToString("yyyy-MM-dd HH:mm")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<!-- end：待处理消息数量 -->

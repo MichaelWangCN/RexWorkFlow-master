@@ -1,0 +1,94 @@
+﻿@{ ViewData["Title"] = "用户信息";
+    Layout = "~/Views/Shared/_LayoutContent.cshtml"; }
+
+@section css {
+    <style type="text/css">
+        .user-head-img {
+            width: 30px;
+            height: 30px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 1px #EFEFEF solid;
+        }
+
+        .btn-container {
+            margin: 10px auto;
+            text-align: center;
+        }
+    </style>
+}
+
+@section scripts {
+    <script src="~/src/sys/plugin/js/user.js" asp-append-version="true"></script>
+}
+<!-- 查询部分 -->
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form">
+            <div class="layui-form-item">
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">用户名</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="UserName" autocomplete="off" maxlength="10" class="layui-input" />
+                    </div>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">用户状态</label>
+                    <div class="layui-input-inline" style="width: 100px">
+                        <select name="IsDel">
+                            <option value="-1">-全部-</option>
+                            <option value="0" selected="selected">可用</option>
+                            <option value="1">不可用</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <button class="pear-btn pear-btn-md pear-btn-primary btn-search" lay-submit lay-filter="user-query">
+                        <i class="layui-icon layui-icon-search"></i>
+                        查询
+                    </button>
+                    <button type="reset" class="pear-btn pear-btn-md">
+                        <i class="layui-icon layui-icon-refresh"></i>
+                        重置
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 列表部分 -->
+<div class="layui-card">
+    <div class="layui-card-body">
+        <input type="hidden" name="more" value="@ViewBag.More" />
+        <table id="user_table" lay-filter="user-table"></table>
+    </div>
+</div>
+
+<div class="btn-container">
+    <button class="pear-btn pear-btn-primary btn-submit">确定</button>
+    <button class="pear-btn btn-cancel">取消</button>
+</div>
+
+<!-- 头像 -->
+<script type="text/html" id="user-img">
+    {{#if (layui.util.isEmpty(d.HeadImg)) { }}
+    无
+    {{# }else{ }}
+    <img src="{{ d.HeadImg }}" title="{{ d.UserName }}" class="user-head-img" />
+    {{# } }}
+</script>
+
+<!-- 账号状态 -->
+<script type="text/html" id="user-enable">
+    {{#if (d.IsDel == 0) { }}
+    <span title="可用" class="fa fa-check green"></span>
+    {{# }else{ }}
+    <span title="已删除" class="fa fa-trash red"></span>
+    {{# } }}
+</script>
+
+<!-- 日期格式化 -->
+<script type="text/html" id="user-createTime">
+    {{layui.util.toDateString(d.CreateTime * 1000, 'yyyy-MM-dd HH:mm')}}
+</script>

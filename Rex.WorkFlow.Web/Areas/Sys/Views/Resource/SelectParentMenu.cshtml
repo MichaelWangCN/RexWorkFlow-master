@@ -1,0 +1,67 @@
+﻿@model ResourceShowViewModel
+@{
+    ViewData["Title"] = "选择树形菜单";
+    Layout = "~/Views/Shared/_LayoutContent.cshtml";
+
+}
+@section css {
+    <link href="~/src/js/zTree/css/bootstrapStyle/bootstrapStyle.css" rel="stylesheet" />
+    <style type="text/css">
+        /* 当前样式 */
+        .resource-container {
+            height: 357px;
+        }
+
+        .btn-container {
+            margin: 10px auto;
+            text-align: center;
+        }
+    </style>
+}
+
+@section scripts {
+    <script src="~/src/js/zTree/js/jquery.min.js"></script>
+    <script src="~/src/js/zTree/js/jquery.ztree.core.js"></script>
+    <script src="~/src/js/zTree/js/jquery.ztree.excheck.js"></script>
+    <script src="~/src/js/zTree/js/jquery.ztree.exedit.js"></script>
+    <script type="text/javascript">
+        var zNodes = JSON.parse(parent.parentTreeMenuData);
+        var setting = {
+            view: {
+                dblClickExpand: false
+            },
+            data: {
+                simpleData: {
+                    enable: true
+                }
+            },
+            callback: {
+                beforeClick: function (treeId, treeNode) {
+                    if (parent.setParentIdMenu) {
+                        parent.setParentIdMenu(treeNode.id, treeNode.name);
+                        $('.btn-cancel').click();
+                    }
+                }
+            }
+        };
+        var resourcesTree = $.fn.zTree.init($("#treeResource"), setting, zNodes);
+        resourcesTree.expandAll(true);
+
+        // 关闭
+        $('.btn-cancel').on('click', function () {
+            var index = parent.layer.getFrameIndex(window.name);
+            parent.layer.close(index);
+        });
+    </script>
+}
+
+<div class="layui-card">
+    <div class="layui-card-body">
+        <div class="resource-container">
+            <ul id="treeResource" class="ztree"></ul>
+        </div>
+    </div>
+</div>
+<div class="btn-container">
+    <button type="button" class="pear-btn btn-cancel">关闭</button>
+</div>

@@ -1,0 +1,201 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>首页</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href="~/ui/css/font-awesome.css" rel="stylesheet" />
+    <link href="~/lib/pear/css/pear.css" rel="stylesheet" />
+    <link href="~/ui/css/other/console2.css" rel="stylesheet" asp-append-version="true" />
+    <style type="text/css">
+        .msg-count {
+            float: right;
+            cursor: pointer;
+        }
+
+            .msg-count cite {
+                font-style: normal;
+                color: #23527c;
+            }
+
+            .msg-count i {
+                color: #23527c;
+            }
+
+        .a-flow {
+            color: #23527c;
+        }
+
+            .a-flow:hover {
+                cursor: pointer;
+                color: #23527c;
+                text-decoration: underline;
+            }
+    </style>
+</head>
+<body class="pear-container">
+    <div class="layui-row layui-col-space10">
+        <div class="layui-col-md12">
+            <div class="layui-row layui-col-space10">
+                <div class="layui-col-md6">
+                    <div class="layui-card">
+                        <div class="layui-card-header">
+                            快捷方式
+                        </div>
+                        <div class="layui-card-body">
+                            <div class="layui-row layui-col-space10">
+                                <div class="layui-col-md3 layui-col-sm3 layui-col-xs3">
+                                    <div class="pear-card" data-id="2" data-title="菜单管理" data-url="/Sys/Resource/Index">
+                                        <i class="fa fa-bars"></i>
+                                    </div>
+                                    <span class="pear-card-title">菜单管理</span>
+                                </div>
+                                <div class="layui-col-md3 layui-col-sm3 layui-col-xs3">
+                                    <div class="pear-card" data-id="53" data-title="角色管理" data-url="/Sys/Role/Index">
+                                        <i class="fa fa-group"></i>
+                                    </div>
+                                    <span class="pear-card-title">角色管理</span>
+                                </div>
+                                <div class="layui-col-md3 layui-col-sm3 layui-col-xs3">
+                                    <div class="pear-card" data-id="91" data-title="流程设计" data-url="/WF/WorkFlow/Index">
+                                        <i class="fa fa-legal"></i>
+                                    </div>
+                                    <span class="pear-card-title">流程设计</span>
+                                </div>
+                                <div class="layui-col-md3 layui-col-sm3 layui-col-xs3">
+                                    <div class="pear-card" data-id="231" data-title="流程发起" data-url="/WF/WorkFlowInstance/Start">
+                                        <i class="fa fa-location-arrow"></i>
+                                    </div>
+                                    <span class="pear-card-title">流程发起</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-col-md6">
+                    <div class="layui-card">
+                        <div class="layui-card-header">
+                            代表事项
+                            <div class="msg-count" data-id="93" data-title="我的待办" data-url="/WF/WorkFlowInstance/TodoList">
+                                <cite title="我的待办">全部</cite>
+                                <i class="fa fa-angle-double-right"></i>
+                                <span class="layui-badge" id="msg_count">0</span>
+                            </div>
+                        </div>
+                        <div class="layui-card-body">
+                            <table id="todo_list" lay-filter="todo-list"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 日期格式化 -->
+    <script type="text/html" id="date_ct">
+        {{layui.util.toDateString(d.CreateTime * 1000, 'yyyy-MM-dd HH:mm')}}
+    </script>
+
+    <!-- 流程名称 -->
+    <script type="text/html" id="flow_name">
+        {{#  if(d.FormType === 1){ }}
+            <a class="a-flow" data-formtype="{{ d.FormType }}" data-formid="{{ d.FormData }}" data-formname="{{ d.FormName }}" data-formurl="{{ d.FormUrl }}">{{ d.FlowName }}</a>
+        {{#  } else { }}
+            <a class="a-flow" data-formtype="{{ d.FormType }}" data-formname="{{ d.FormName }}" data-flowid="{{ d.FlowId }}" data-instanceid="{{ d.InstanceId }}">{{ d.FlowName }}</a>
+        {{#  } }}
+        
+    </script>
+
+    <!--</div>-->
+    <script src="~/lib/layui/layui.js"></script>
+    <script src="~/lib/pear/pear.js"></script>
+    <script type="text/javascript">
+        layui.use(['layer', 'carousel', 'element', 'table'], function () {
+            var $ = layui.jquery,
+                layer = layui.layer,
+                element = layui.element,
+                table = layui.table,
+                carousel = layui.carousel;
+
+            let cols = [
+                [
+                    {
+                        title: '流程名称',
+                        field: 'FlowName',
+                        templet: '#flow_name',
+                        align: 'center'
+                    },
+                    {
+                        title: '发起人',
+                        field: 'UserName',
+                        align: 'center'
+                    },
+                    {
+                        title: '日期',
+                        field: 'CreateTime',
+                        align: 'center',
+                        templet: '#date_ct',
+                        width: 150
+                    }
+                ]
+            ]
+
+            table.render({
+                elem: '#todo_list',
+                url: '/WF/WorkFlowInstance/HomeTodoList',
+                page: false,
+                cols: cols,
+                skin: 'line',
+                done: function (res, curr, count) {
+                    $('#msg_count').text(res.count);
+                    ClickFlowName();
+                }
+            });
+
+            $("body").on("click", "[data-url]", function () {
+                parent.layui.tab.addTabOnlyByElem("content", {
+                    id: $(this).attr("data-id"),
+                    title: $(this).attr("data-title"),
+                    url: $(this).attr("data-url"),
+                    close: true
+                });
+            });
+
+            // 流程名称点击事件
+            function ClickFlowName() {
+                $('.a-flow').on('click', function () {
+                    var _this = $(this);
+                    var formtype = _this.attr('data-formtype');
+                    var formname = _this.attr('data-formname');
+                    if (formtype == 1) {
+                        var formid = _this.attr('data-formid');
+                        var formurl = _this.attr('data-formurl');
+                        parent.layui.tab.addTabOnlyByElem("content", {
+                            id: "openProcess",
+                            title: formname + '流程查看',
+                            url: formurl + "?id=" + formid,
+                            close: true
+                        });
+                    } else if (formtype == 0) {
+                        var flowid = $(this).attr('data-flowid');
+                        var instanceid = $(this).attr('data-instanceid');
+                        parent.layui.tab.addTabOnlyByElem("content", {
+                            id: "openProcess",
+                            title: formname + '流程查看',
+                            url: "/WF/WorkFlowInstance/Process?flowid=" + flowid + "&instanceid=" + instanceid,
+                            close: true
+                        });
+                    }
+                });
+            }
+
+        });
+    </script>
+</body>
+</html>

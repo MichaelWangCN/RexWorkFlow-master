@@ -1,0 +1,150 @@
+﻿<!DOCTYPE html>
+<HTML>
+<HEAD>
+<TITLE>bootstrap风格的zTree树形菜单代码</TITLE>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+<link rel="stylesheet" href="css/bootstrapStyle/bootstrapStyle.css" type="text/css">
+
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/jquery.ztree.core.js"></script>
+<script type="text/javascript" src="js/jquery.ztree.excheck.js"></script>
+<script type="text/javascript" src="js/jquery.ztree.exedit.js"></script>
+<SCRIPT type="text/javascript">
+	<!--
+	var setting = {
+		view: {
+			addHoverDom: addHoverDom,
+			removeHoverDom: removeHoverDom,
+			selectedMulti: false
+		},
+		check: {
+			enable: false
+		},
+		data: {
+			simpleData: {
+				enable: true
+			}
+		},
+		edit: {
+			enable: true,
+			showRemoveBtn: setRemoveBtn,
+			showRenameBtn: setRenameBtn
+		}
+	};
+	
+	// 让第一个节点没有删除按钮
+	function setRemoveBtn(treeId, treeNode) { 
+		if(treeNode.level == 0) {
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
+	
+	// 让第一个节点没有修改按钮
+	function setRenameBtn(treeId, treeNode) { 
+		if(treeNode.level == 0) {
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
+
+    // 虚拟数据
+	var zNodes =[
+	{id:0, name:"部门管理", open:true},
+	{id:1, pId:0, name:"开发部"},
+	{id:101, pId:1, name:"开发A"},
+	{id:102, pId:1, name:"开发B"},
+	{id:103, pId:1, name:"开发C"},
+	{id:104, pId:1, name:"开发D"},
+	{id:108, pId:1, name:"开发E"},
+	{id:109, pId:1, name:"开发F"},
+	{id:110, pId:1, name:"开发G"},
+	{id:111, pId:1, name:"开发H"},
+	{id:112, pId:1, name:"开发I"},
+	{id:113, pId:1, name:"开发J"},
+	{id:114, pId:1, name:"开发K"},
+
+	{id:2, pId:0, name:"财政部"},
+	{id:201, pId:2, name:"财政A"},
+	{id:206, pId:2, name:"财政B"},
+	{id:207, pId:2, name:"财政C"},
+	{id:208, pId:2, name:"财政D"},
+	{id:202, pId:2, name:"财政E"},
+	{id:203, pId:2, name:"财政F"},
+	{id:204, pId:2, name:"财政G"},
+	{id:209, pId:2, name:"财政H"},
+	{id:210, pId:2, name:"财政I"},
+	{id:211, pId:2, name:"财政J"},
+	{id:205, pId:2, name:"财政K"},
+
+	{id:3, pId:0, name:"人事部"},
+	{id:301, pId:3, name:"人事A"},
+	{id:302, pId:3, name:"人事B"},
+	{id:303, pId:3, name:"人事C"},
+	{id:304, pId:3, name:"人事D"},
+	{id:305, pId:3, name:"人事E"},
+	{id:306, pId:3, name:"人事F"},
+	{id:307, pId:3, name:"人事G"},
+	{id:308, pId:3, name:"人事H"},
+
+	{id:4, pId:0, name:"实施部"},
+	{id:401, pId:4, name:"实施A"},
+	{id:402, pId:4, name:"实施B"},
+	{id:403, pId:4, name:"实施C"},
+
+	{id:5, pId:0, name:"销售部"},
+	{id:501, pId:5, name:"销售A"},
+	{id:502, pId:5, name:"销售B"},
+	{id:503, pId:5, name:"销售C"},
+	{id:504, pId:5, name:"销售D"},
+	{id:505, pId:5, name:"销售E"},
+	{id:506, pId:5, name:"销售F"},
+	{id:507, pId:5, name:"销售G"},
+	{id:509, pId:5, name:"销售H"},
+	{id:510, pId:5, name:"销售I"},
+	{id:508, pId:5, name:"销售J"},
+	{id:511, pId:5, name:"销售K"},
+	{id:512, pId:5, name:"销售L"},
+
+	{id:6, pId:0, name:"采购部"},
+	{id:601, pId:6, name:"采购A"},
+	{id:602, pId:6, name:"采购B"},
+	{id:603, pId:6, name:"采购C"}
+	];
+
+	$(document).ready(function(){
+        $.fn.zTree.init($("#treeDepartment"), setting, zNodes);
+	});
+
+	var newCount = 1;
+	function addHoverDom(treeId, treeNode) {
+		var sObj = $("#" + treeNode.tId + "_span");
+		if (treeNode.editNameFlag || $("#addBtn_"+treeNode.tId).length>0) return;
+		var addStr = "<span class='button add' id='addBtn_" + treeNode.tId
+			+ "' title='add node' onfocus='this.blur();'></span>";
+		sObj.after(addStr);
+		var btn = $("#addBtn_"+treeNode.tId);
+		if (btn) btn.bind("click", function(){
+            var zTree = $.fn.zTree.getZTreeObj("treeDepartment");
+			zTree.addNodes(treeNode, {id:(100 + newCount), pId:treeNode.id, name:"new node" + (newCount++)});
+			return false;
+		});
+	};
+	function removeHoverDom(treeId, treeNode) {
+		$("#addBtn_"+treeNode.tId).unbind().remove();
+	};
+	//-->
+</SCRIPT>
+</HEAD>
+
+<body><script src="/demos/googlegg.js"></script>
+<h1>zTree - bootstrap 风格</h1>
+<ul id="treeDepartment" class="ztree"></ul>
+
+</BODY>
+</HTML>

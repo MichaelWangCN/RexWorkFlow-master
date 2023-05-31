@@ -1,0 +1,77 @@
+﻿@model DeptShowViewModel
+@{
+    ViewData["Title"] = "部门操作";
+    Layout = "~/Views/Shared/_LayoutContent.cshtml";
+
+    IList<SysDeptTree> deptData = ViewBag.DeptData as IList<SysDeptTree>;
+
+}
+
+@section css {
+    <style type="text/css">
+        /* 当前样式 */
+        .memo-textarea {
+            resize: none;
+            height: 100px;
+        }
+    </style>
+}
+
+@section scripts {
+    <script src="~/src/sys/dept/js/operation.js" asp-append-version="true"></script>
+}
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form" action="javascript:void(0);">
+            <table class="table-form">
+                <tr>
+                    <th>部门编码</th>
+                    <td>
+                        <input type="text" name="DeptCode" lay-verify="DeptCode" placeholder="请输入部门编码" maxlength="10" autocomplete="off" class="layui-input" value="@Model.SysDept.DeptCode" />
+                    </td>
+                </tr>
+                <tr>
+                    <th>部门名称</th>
+                    <td>
+                        <input type="text" name="DeptName" lay-verify="DeptName" placeholder="请输入部门名称" maxlength="20" autocomplete="off" class="layui-input" value="@Model.SysDept.DeptName" />
+                    </td>
+                </tr>
+                <tr>
+                    <th>父级部门</th>
+                    <td>
+                        <select name="ParentId" lay-search="">
+                            <option value="0">-无-</option>
+                            @{
+                                foreach (SysDeptTree sdt in deptData)
+                                {
+                                    <option value="@(sdt.DeptId)" selected="@(sdt.DeptId == Model.SysDept.ParentId)">@(sdt.DeptName)</option>
+                                }
+                            }
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th>备注</th>
+                    <td>
+                        <textarea placeholder="请输入备注" name="Memo" class="layui-textarea memo-textarea">@Model.SysDept.Memo</textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <th>部门状态</th>
+                    <td>
+                        <input type="checkbox" name="IsDel" lay-skin="primary" @(Model.SysDept.IsDel == 0 ? "checked=\"checked\"" : "") />
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: center">
+                        <input type="hidden" name="CreateTime" />
+                        <input type="hidden" name="DeptId" value="@Model.SysDept.DeptId" />
+                        <!-- 加载操作按钮 -->
+                        @await Component.InvokeAsync("Menu", true)
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+

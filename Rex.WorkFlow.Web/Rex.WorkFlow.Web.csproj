@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <StartupObject>Rex.WorkFlow.Web.Program</StartupObject>
+    <UserSecretsId>65bb7a1c-2086-43a3-aa9d-f73673f5e727</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="8.0.0" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="6.0.0" />
+    <PackageReference Include="IdentityModel" Version="4.4.0" />
+    <PackageReference Include="JadeFramework.Cache" Version="1.0.1.4" />
+    <PackageReference Include="JadeFramework.Core.Mvc" Version="1.0.1.6" />
+    <PackageReference Include="JadeFramework.Dapper" Version="1.0.1.6" />
+    <PackageReference Include="JadeFramework.Redis" Version="1.0.1.5" />
+    <PackageReference Include="JadeFramework.WorkFlow" Version="1.0.3.5" />
+    <PackageReference Include="log4net" Version="2.0.12" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.10" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="3.1.10" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Redis" Version="2.2.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.1.5" />
+    <PackageReference Include="MySql.Data" Version="8.0.33" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+    <PackageReference Include="System.Drawing.Common" Version="5.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Views\Error\" />
+    <Folder Include="Views\Shared\Components\WorkFlowMenu\" />
+    <Folder Include="wwwroot\src\js\" />
+    <Folder Include="wwwroot\data\" />
+    <Folder Include="Config\" />
+    <Folder Include="wwwroot\ui\js\" />
+  </ItemGroup>
+
+</Project>

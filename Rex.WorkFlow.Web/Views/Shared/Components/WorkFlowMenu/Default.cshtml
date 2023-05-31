@@ -1,0 +1,643 @@
+﻿@*自定义流程*@
+@using JadeFramework.WorkFlow
+@using JadeFramework.Core
+@using JadeFramework.Core.Extensions
+@model WorkFlowProcess
+@{
+    string rejectNodeTypeStr = "";
+    foreach (var item in Enum<NodeRejectType>.AsEnumerable())
+    {
+        rejectNodeTypeStr += "<option value=" + (int)item + ">" + item.GetDescription() + "</option>";
+    }
+    string rejectNodeStr = "";
+    if (Model.ExecutedNode != null)
+    {
+        foreach (var item in Model.ExecutedNode)
+        {
+            rejectNodeStr += "<option value=" + item.Id + ">" + item.Name + "</option>";
+        }
+    }
+    WorkFlowStatus flowStatus = (WorkFlowStatus)Model.FlowData.Status;
+}
+<div class="btn-group btn-group-sm noprint" id="flowmenus">
+    <input type="hidden" asp-for="InstanceId" />
+    <input type="hidden" value="@Model.FlowData.IsFinish" name="isFinish" />
+    <input type="hidden" value="@Model.FlowData.Status" name="flowStatus" />
+    @foreach (var item in Model.Menus)
+    {
+        var buttonType = (WorkFlowMenu)item;
+        var cls = "";
+        switch (buttonType)
+        {
+            case WorkFlowMenu.Return:
+                cls = "fa fa-mail-reply";
+                break;
+            case WorkFlowMenu.Save:
+                cls = "fa fa-save";
+                break;
+            case WorkFlowMenu.Submit:
+                cls = "fa fa-share";
+                break;
+            case WorkFlowMenu.Agree:
+                cls = "fa fa-check";
+                break;
+            case WorkFlowMenu.Deprecate:
+                cls = "fa fa-close";
+                break;
+            case WorkFlowMenu.Back:
+                cls = "fa fa-rotate-left";
+                break;
+            case WorkFlowMenu.FlowImage:
+                cls = "fa fa-image";
+                break;
+            case WorkFlowMenu.Approval:
+                cls = "fa fa-list-alt";
+                break;
+            case WorkFlowMenu.ReSubmit:
+                cls = "fa fa-mail-forward";
+                break;
+            case WorkFlowMenu.Withdraw:
+                cls = "fa fa-reply-all";
+                break;
+            case WorkFlowMenu.View:
+                cls = "fa fa-eye";
+                break;
+            case WorkFlowMenu.Print:
+                cls = "fa fa-print";
+                break;
+            case WorkFlowMenu.Cancel:
+                break;
+            case WorkFlowMenu.Throgh:
+                break;
+            case WorkFlowMenu.Assign:
+                cls = "fa fa-hand-pointer-o";
+                break;
+            case WorkFlowMenu.CC:
+                break;
+            case WorkFlowMenu.Suspend:
+                break;
+            case WorkFlowMenu.Resume:
+                break;
+            default:
+                break;
+        }
+        <button class="btn btn-sm btn-permission" name="WorkFlowBtn" data-type="@item" data-typename="@buttonType.ToString()">
+            <i class="@cls"></i><span class="ml5">@(buttonType.GetDescription())</span>
+        </button>
+    }
+</div>
+
+@if (Model.FlowData.IsFinish == null && flowStatus == WorkFlowStatus.UnSubmit)
+{
+    <div class="flowstatus unsubmit">未提交</div>
+}
+else if (Model.FlowData.IsFinish == 1 && flowStatus == WorkFlowStatus.IsFinish)
+{
+    <div class="flowstatus checked">已审核</div>
+}
+else
+{
+    switch (flowStatus)
+    {
+        case WorkFlowStatus.Running:
+            <div class="flowstatus running">审核中</div>
+            break;
+        case WorkFlowStatus.Deprecate:
+            <div class="flowstatus unuchecked">不同意</div>
+            break;
+        case WorkFlowStatus.Back:
+            <div class="flowstatus unuchecked">已退回</div>
+            break;
+        case WorkFlowStatus.Stop:
+            <div class="flowstatus unuchecked">已终止</div>
+            break;
+        case WorkFlowStatus.Withdraw:
+            <div class="flowstatus unsubmit">已撤回</div>
+            break;
+        default:
+            break;
+    }
+}
+
+<script type="text/javascript" on-content-loaded="true">
+    var data='';
+    @if (!string.IsNullOrEmpty(Model.FormData))
+    {
+        <text>
+        data = JSON.parse('@Html.Raw(Model.FormData)');
+        </text>
+    }
+    if (data != '') {
+        $.each(data, function (key, value) {
+            var tag = $('#form-process [name=' + key + ']');
+            var tagName = tag[0].tagName.toLowerCase();
+            if (tagName == 'input' || tagName == 'textarea') {
+                tag.val(value);
+            } else {
+                alert('请添加该标签类型');
+            }
+        });
+    }
+    $('button[name=WorkFlowBtn][data-typename=@WorkFlowMenu.Return]').on('click', function() {
+        closeTab();
+    });
+    $('button[name=WorkFlowBtn][data-typename=@WorkFlowMenu.FlowImage]').on('click', function () {
+        utils.open({
+            title: '流程图查看',
+            area: ['900px', '600px'],
+            content: '/WF/WorkFlowInstance/FlowImage?@("flowid=" + Model.FlowId + "&InstanceId=" + Model.InstanceId)'
+        });
+    });
+    @if (Model.Menus.Contains((int)WorkFlowMenu.Save))
+    {
+        <text>
+        $('button[name=WorkFlowBtn][data-typename=@WorkFlowMenu.Save]').on('click', function () {
+            if (typeof (saveFormData) !== "function") {
+                alert('请添加saveFormData方法！');
+            } else {
+                saveFormData();
+            }
+        });
+        </text>
+    }
+    @if (!Model.Menus.Contains((int)WorkFlowMenu.Submit) && !Model.Menus.Contains((int)WorkFlowMenu.Save))
+    {
+    <text> $.setFormDisabled(); </text>
+    }
+    else
+    {
+    <text>
+    var saveFormData = function (callback) {
+        var isvalid = $('#form-process').valid();
+        if (isvalid === false) {
+            return;
+        }
+        var params = {};
+        $('#form-process [name^=FlowParam_]').each(function () {
+            var name = $(this).attr('name');
+            var val = $(this).val();
+            params[name] = val;
+        });
+        var json = JSON.stringify(params);
+        var model = {
+            FlowId: '@Model.FlowId',
+            InstanceId: $('input[name=InstanceId]').val(),
+            FormId: '@Model.FormId',
+            MenuType: $(this).attr('data-type'),
+            FormData: json
+        };
+
+        axios.post('/WF/WorkFlowInstance/AddOrUpdateCustomFlowFormAsync', model).then(function (response) {
+            if (response.data) {
+                layer.msg('表单保存成功！', { icon: 1, time: 800 }, function () {
+                    if (callback) {
+                        if (response.data.Result) {
+                            $('input[name=InstanceId]').val(response.data.Data);
+                            callback(response.data);
+                        } else {
+                            alert('表单信息保存失败！');
+                        }
+                    } else {
+                        closeTab();
+                    }
+                });
+            } else {
+                layer.msg('表单保存失败！', { icon: 5, time: 1500 });
+            }
+        });
+    };
+    </text>
+    }
+    @if (Model.Menus.Contains((int)WorkFlowMenu.Submit))
+    {
+    <text>
+    $('button[name=WorkFlowBtn][data-typename=@WorkFlowMenu.Submit]').on('click', function () {
+        if ('@(Model.InstanceId == null || Model.InstanceId == default(Guid))' === '@bool.TrueString') {
+            if (typeof (saveFormData) !== "function") {
+                alert('请添加saveFormData方法！');
+                return;
+            }
+            //先进行保存步骤
+            saveFormData(function () {
+                saveWorkFlow();
+            });
+        } else {
+            saveWorkFlow();
+        }
+        function saveWorkFlow() {
+            var type = $(this).attr('data-type');
+            var params = {};
+            $('#form-process [name^=FlowParam_]').each(function () {
+                var name = $(this).attr('name');
+                var val = $(this).val();
+                params[name] = val;
+            });
+            var json = JSON.stringify(params);
+            save_form(type, json, function (data) {
+                if (data.Result) {
+                    layer.msg('流程提交成功！', { icon: 1, time: 1500 }, function () {
+                        closeTab();
+                    });
+                } else {
+                    layer.msg('流程提交失败！', { icon: 5, time: 1500 });
+                }
+            });
+        }
+    });
+    var save_form = function (type, formData,callback) {
+        var model = {
+            FlowId: '@Model.FlowId',
+            InstanceId: $('input[name=InstanceId]').val(),
+            MenuType: type,
+            FormData: formData
+        };
+        var loadingIndex = layer.load(0, {
+            shade: [0.25, 'gray'],
+            content: '提交中...',
+            success: function (layero) {
+                layero.find('.layui-layer-content').css({
+                    'padding-top': '39px',
+                    'width': '60px'
+                });
+            }
+        });
+        axios.post('/WF/WorkFlowInstance/CreateInstanceAsync', model).then(function (response) {
+            layer.closeAll();
+            if (callback) {
+                callback(response.data);
+            }
+        });
+    };
+    </text>
+    }
+    @if (Model.Menus.Contains((int)WorkFlowMenu.ReSubmit))
+    {
+    <text>
+    $('button[name=WorkFlowBtn][data-typename=@WorkFlowMenu.ReSubmit]').on('click', function () {
+        if (typeof (saveFormData) !== "function") {
+            alert('请添加saveFormData方法！');
+            return;
+        }
+        //先进行保存步骤
+        saveFormData(function () {
+            resubmitflow();
+        });
+        function resubmitflow() {
+            var model = {
+                FlowId: '@Model.FlowId',
+                InstanceId: $('input[name=InstanceId]').val(),
+                MenuType: '@WorkFlowMenu.ReSubmit'
+            };
+            transition(model);
+            return false;
+        }
+    });
+    </text>
+    }
+    @if (Model.Menus.Contains((int)WorkFlowMenu.Agree)|| Model.Menus.Contains((int)WorkFlowMenu.Deprecate)
+       || Model.Menus.Contains((int)WorkFlowMenu.ReSubmit) || Model.Menus.Contains((int)WorkFlowMenu.Withdraw)
+       || Model.Menus.Contains((int)WorkFlowMenu.View))
+    {
+    <text>
+    var get_modal = function (menutype, content, tipmsg) {
+        if (tipmsg == undefined) {
+            tipmsg = "";
+        }
+        var html = '<div class="modal" style="overflow: auto;" tabindex="-1">';
+        html += '       <div class="modal-dialog">';
+        html += '           <div class="modal-content">';
+        html += '               <div class="modal-header">';
+        html += '                   <a class="close" data-dismiss="modal" aria-hidden="true">&times;</a>';
+        html += '                   <h4 class="modal-title">【@Model.FlowName】'+ menutype + ' 审批意见</h4>';
+        html += '               </div>';
+        html += '               <div class="modal-body ui-front">';
+        html += '                   <textarea class="form-control" style="min-height: 150px; margin-bottom: 10px;font-family: Monaco, Fixed" placeholder="' + tipmsg + '">' + content + '</textarea>';
+        html += '                   <div class="btn-group btn-group-sm">';
+        html += '                       <button class="btn btn-sm btn-permission btn-permission-search" id="saveModal"><i class="fa fa-save"></i><span class="ml5">保存</span></button>';
+        html += '                       <button type="button" class="btn btn-sm btn-permission" data-dismiss="modal"><i class="fa fa-mail-reply"></i><span class="ml5">关闭</span></button>';
+        html += '                   </div>';
+        html += '               </div>';
+        html += '           </div>';
+        html += '       </div>';
+        html += '</div>';
+        var modal = $(html).appendTo(document.body);
+        return modal;
+    };
+    function transition(model,callback) {
+        axios.post('/WF/WorkFlowInstance/ProcessTransitionFlowAsync', model).then(function (response) {
+            if (response.data.Result) {
+                if (callback) {
+                    callback();
+                }
+                layer.msg('提交成功！', { icon: 1, time: 1500 }, function () {
+                    closeTab();
+                });
+            } else {
+                layer.msg('提交失败！', { icon: 5, time: 1500 });
+            }
+        });
+    }
+    </text>
+    }
+    @if (Model.Menus.Contains((int)WorkFlowMenu.Agree))
+    {
+    <text>
+    $('button[name=WorkFlowBtn][data-typename=@WorkFlowMenu.Agree]').on('click', function () {
+        var $modal = get_modal('@WorkFlowMenu.Agree.GetDescription()',"同意！").modal({ backdrop: 'static', keyboard: false, show: true });
+        $modal.find(":input:first").select().focus();
+        $modal.find("#saveModal").click(function () {
+            var ProcessContent = $modal.find("textarea").val();
+            if (ProcessContent == '' || ProcessContent == null) {
+                layer.msg('请输入审批意见', { icon: 5, time: 1500 });
+            } else {
+                var model = {
+                    FlowId: '@Model.FlowId',
+                    InstanceId: $('input[name=InstanceId]').val(),
+                    MenuType: '@WorkFlowMenu.Agree',
+                    ProcessContent: ProcessContent
+                };
+                transition(model, function () {
+                    $modal.modal("hide");
+                });
+                return false;
+            }
+        });
+    });
+    </text>
+    }
+    @if (Model.Menus.Contains((int)WorkFlowMenu.Deprecate))
+    {
+    <text>
+    $('button[name=WorkFlowBtn][data-typename=@WorkFlowMenu.Deprecate]').on('click', function () {
+        var $modal = get_modal('@WorkFlowMenu.Deprecate.GetDescription()',"","请填写不同意理由！").modal({ backdrop: 'static', keyboard: false, show: true });
+        $modal.find(":input:first").select().focus();
+        $modal.find("#saveModal").click(function () {
+            var ProcessContent = $modal.find("textarea").val();
+            if (ProcessContent == '' || ProcessContent == null) {
+                layer.msg('请填写不同意理由！', { icon: 5, time: 1500 });
+            } else {
+                var model = {
+                    FlowId: '@Model.FlowId',
+                    InstanceId: $('input[name=InstanceId]').val(),
+                    MenuType: '@WorkFlowMenu.Deprecate',
+                    ProcessContent: ProcessContent
+                };
+                transition(model, function () {
+                    $modal.modal("hide");
+                });
+                return false;
+            }
+        });
+    });
+    </text>
+    }
+    @if (Model.Menus.Contains((int)WorkFlowMenu.Back))
+    {
+    <text>
+    var back_modal = function (menutype, content, tipmsg) {
+        if (tipmsg == undefined) {
+            tipmsg = "";
+        }
+        var html = '<div class="modal" style="overflow: auto;" tabindex="-1">';
+        html += '	    <div class="modal-dialog">';
+        html += '		    <div class="modal-content">';
+        html += '		        <div class="modal-header">';
+        html += '				    <a class="close" data-dismiss="modal" aria-hidden="true">&times;</a>';
+        html += '				    <h4 class="modal-title">【@Model.FlowName】' + menutype + ' 审批意见</h4>';
+        html += '			    </div>';
+        html += '			    <div class="modal-body ui-front">退回节点：';
+        html += '                   <span class="select-box inline"><select class="select" id="NodeRejectType" name="NodeRejectType">@Html.Raw(rejectNodeTypeStr)</select></span>';
+        html += '                   <span class="select-box" style="display:none"><select style="display:none" class="select" id="RejectNodeId" name="RejectNodeId">@Html.Raw(rejectNodeStr)</select></span>';
+        html += '                   <textarea class="form-control" style="min-height: 150px; margin:10px 0px;font-family: Monaco, Fixed" placeholder="' + tipmsg + '">' + content + '</textarea>';
+        html += '                   <div class="btn-group btn-group-sm">';
+        html += '                       <button class="btn btn-sm btn-permission btn-permission-search" id="saveModal"><i class="fa fa-save"></i><span class="ml5">保存</span></button>';
+        html += '                       <button type="button" class="btn btn-sm btn-permission" data-dismiss="modal"><i class="fa fa-mail-reply"></i><span class="ml5">关闭</span></button>';
+        html += '                   </div>';
+        html += '               </div>';
+        html += '           </div>';
+        html += '       </div>';
+        html += '</div>';
+        var modal = $(html).appendTo(document.body);
+        return modal;
+    };
+    $('button[name=WorkFlowBtn][data-typename=@WorkFlowMenu.Back]').on('click', function () {
+        var $modal = back_modal('@WorkFlowMenu.Back.GetDescription()',"","请填写退回理由！").modal({ backdrop: 'static', keyboard: false, show: true });
+        $modal.find(":input:first").select().focus();
+        $modal.find('#NodeRejectType').change(function () {
+            var val = $(this).val();
+            if (val == '@((int)NodeRejectType.ForOneStep)') {
+                $modal.find('#RejectNodeId').show();
+                $modal.find('#RejectNodeId').parent().addClass('inline');
+            } else {
+                $modal.find('#RejectNodeId').hide();
+                $modal.find('#RejectNodeId').parent().removeClass('inline');
+            }
+        });
+        $modal.find("#saveModal").click(function () {
+            var ProcessContent = $modal.find("textarea").val();
+            if (ProcessContent == '' || ProcessContent == null) {
+                layer.msg('请填写退回理由!', { icon: 5, time: 1500 });
+            } else {
+                var model = {
+                    FlowId: '@Model.FlowId',
+                    InstanceId: $('input[name=InstanceId]').val(),
+                    MenuType: '@WorkFlowMenu.Back',
+                    ProcessContent: ProcessContent,
+                    NodeRejectType: $modal.find('#NodeRejectType').val(),
+                    RejectNodeId: $modal.find('#RejectNodeId').val()
+                };
+                transition(model, function () {
+                    $modal.modal("hide");
+                });
+                return false;
+            }
+        });
+    });
+    </text>
+    }
+    @if (Model.Menus.Contains((int)WorkFlowMenu.Approval))
+    {
+    <text>
+    var get_Approval = function (table) {
+        var html = '<div class="modal" style="overflow: auto;" tabindex="-1">';
+        html += '	    <div class="modal-dialog">';
+        html += '		    <div class="modal-content">';
+        html += '			    <div class="modal-header">';
+        html += '				    <a class="close"';
+        html += '					    data-dismiss="modal" aria-hidden="true">&times;</a>';
+        html += '				    <h4 class="modal-title">审批意见</h4>';
+        html += '			    </div>';
+        html += '			    <div class="modal-body ui-front" style="padding:0px;max-height:400px;overflow-y:auto;">' + table;
+        html += '			    </div>';
+        html += '		    </div>';
+        html += '	    </div>';
+        html += '	</div>';
+        var modal = $(html).appendTo(document.body);
+        return modal;
+    };
+    $('button[name=WorkFlowBtn][data-typename=@WorkFlowMenu.Approval]').on('click', function () {
+        var model = {
+            FlowId: '@Model.FlowId',
+            InstanceId: $('input[name=InstanceId]').val(),
+            MenuType: '@WorkFlowMenu.Approval'
+        };
+        axios.get('/WF/WorkFlowInstance/GetFlowApprovalAsync', { params: model }).then(function (response) {
+            if (response.status == 200) {
+                if (response.data.Result) {
+                    html = '<div id="vertical-timeline" class="vertical-container light-timeline">';
+                    $.each(response.data.Data, function (index, item) {
+                        var obj = getApprovalIcon(item.TransitionType);
+                        html += '<div class="vertical-timeline-block">';
+                        html += '<div class="vertical-timeline-icon white-bg" title="' + obj.title + '"><i class="' + obj.icon + '"></i></div>';
+                        html += '<div class="vertical-timeline-content" style="padding: 0.4em;">';
+                        html += '<p style="margin:0px;border-bottom: 1px solid #f1f1f1;">';
+                        html += '<strong>【' + item.NodeName + '】</strong>&nbsp;&nbsp;' + item.CreateUserName;
+                        if (item.TransitionType != null || item.NodeName == '结束') {
+                            html += '<span class="vertical-date" style="float:right"><small style="color:#0e9aef;">' + $.unixToDate(item.CreateTime, true) + '</small></span>';
+                        }
+                        html += '</p>'
+                        if (item.Content != null) {
+                            html += '<p style="padding-left:5px;margin:8px 0px;">' + item.Content + '</p >';
+                        }
+                        html += '</div>';
+                        html += '</div>';
+                    });
+                    html += '</div>';
+                    get_Approval(html).modal({ backdrop: 'static', keyboard: false, show: true });
+                } else {
+                    layer.msg('获取异常!', { icon: 5, time: 1500 });
+                }
+            }
+        });
+        function getApprovalIcon(type) {
+            var obj = {
+                "icon": null,
+                "title": null
+            };
+            switch (type) {
+                case 1:
+                    obj.icon = "fa fa-play green";
+                    obj.title = "开始";
+                    break;
+                case 2:
+                    obj.icon = "fa fa-check green";
+                    obj.title = "同意";
+                    break;
+                case 3:
+                    obj.icon = "fa fa-mail-reply red";
+                    obj.title = "再次提交";
+                    break;
+                case 5:
+                    obj.icon = "fa fa-reply-all red";
+                    obj.title = "撤回";
+                    break;
+                case 6:
+                    obj.icon = "fa fa-hand-pointer-o red";
+                    obj.title = "委托";
+                    break;
+                case 7:
+                    obj.icon = "fa fa-rotate-left red";
+                    obj.title = "退回";
+                    break;
+                case 9:
+                    obj.icon = "fa fa-eye green";
+                    obj.title = "已阅";
+                    break;
+                default:
+                    obj.icon = "fa fa-stop red";
+                    obj.title = "结束";
+            }
+            return obj;
+        }
+    });
+    </text>
+    }
+    @if (Model.Menus.Contains((int)WorkFlowMenu.Withdraw))
+    {
+    <text>
+    $('button[name=WorkFlowBtn][data-typename=@WorkFlowMenu.Withdraw]').on('click', function () {
+        layer.confirm('您确定要撤回该流程？', {
+            btn: ['确定', '取消']
+        }, function () {
+            var model = {
+                FlowId: '@Model.FlowId',
+                InstanceId: $('input[name=InstanceId]').val(),
+                MenuType: '@WorkFlowMenu.Withdraw'
+            };
+            transition(model, function () {
+
+            });
+        });
+    });
+    </text>
+    }
+    @if (Model.Menus.Contains((int)WorkFlowMenu.View))
+    {
+    <text>
+    $('button[name=WorkFlowBtn][data-typename=@WorkFlowMenu.View]').on('click', function () {
+        var model = {
+            FlowId: '@Model.FlowId',
+            InstanceId: $('input[name=InstanceId]').val(),
+            MenuType: '@WorkFlowMenu.View'
+        };
+        transition(model);
+    });
+    </text>
+    }
+    @if (Model.Menus.Contains((int)WorkFlowMenu.Print))
+    {
+    <text>
+    $('button[name=WorkFlowBtn][data-typename=@WorkFlowMenu.Print]').on('click', function () {
+        $("body").print();
+    });
+    </text>
+    }
+    @if (Model.Menus.Contains((int)WorkFlowMenu.Assign))
+    {
+    <text>
+
+    $('button[name=WorkFlowBtn][data-typename=@WorkFlowMenu.Assign]').on('click', function () {
+        layer.open({
+            type: 2,
+            title: '选择委托用户',
+            maxmin: false,
+            area: ['1000px', '700px'],
+            content: '/Sys/Plugin/User?more=0',
+            success: function (layero, index) {
+                layero.find('iframe').focus();
+            }
+        });
+    });
+
+    window.SaveUsers = function (uInfo) {
+        var $modal = get_modal('请求委托内容(可空)',"").modal({ backdrop: 'static', keyboard: false, show: true });
+        $modal.find(":input:first").select().focus();
+        $modal.find("#saveModal").click(function () {
+            var ProcessContent = $modal.find("textarea").val();
+            var model = {
+                FlowId: '@Model.FlowId',
+                InstanceId: $('input[name=InstanceId]').val(),
+                MenuType: '@WorkFlowMenu.Assign',
+                ProcessContent: ProcessContent,
+                Assign: {
+                    AssignUserId: uInfo[0].UserId,
+                    AssignUserName: uInfo[0].UserName,
+                    AssignContent: ProcessContent
+                }
+            };
+            transition(model, function () {
+                $modal.modal("hide");
+            });
+            return false;
+        });
+
+    };
+
+    </text>
+    }
+
+    // 关闭Tab
+    function closeTab() {
+        parent.layui.element.tabDelete('content', "openProcess");
+    }
+</script>

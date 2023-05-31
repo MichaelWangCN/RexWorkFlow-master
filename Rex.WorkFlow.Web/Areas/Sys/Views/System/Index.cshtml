@@ -1,0 +1,44 @@
+﻿@{
+    ViewData["Title"] = "(子)系统管理";
+    Layout = "~/Views/Shared/_LayoutContent.cshtml";
+}
+
+@section css {
+    <style type="text/css">
+        /* 样式部分 */
+
+    </style>
+}
+@section scripts {
+    <script src="~/src/sys/system/js/index.js" asp-append-version="true"></script>
+}
+<!-- 查询部分 -->
+
+<!-- 列表部分 -->
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="system_table" lay-filter="system-table"></table>
+    </div>
+</div>
+
+<!-- 数据表格操作部分 -->
+@await Component.InvokeAsync("Menu")
+
+<!-- 系统列表操作 -->
+<script type="text/html" id="system_bar">
+    <button class="pear-btn pear-btn-sm" lay-event="look"><i class="fa fa-eye"></i>&nbsp;查看</button>
+</script>
+
+<!-- 状态 -->
+<script type="text/html" id="system_enable">
+    {{#if (d.IsDel == 0) { }}
+    <span title="可用" class="fa fa-check green"></span>
+    {{# }else{ }}
+    <span title="已删除" class="fa fa-trash red"></span>
+    {{# } }}
+</script>
+
+<!-- 日期格式化 -->
+<script type="text/html" id="system_createTime">
+    {{layui.util.toDateString(d.CreateTime * 1000, 'yyyy-MM-dd HH:mm')}}
+</script>

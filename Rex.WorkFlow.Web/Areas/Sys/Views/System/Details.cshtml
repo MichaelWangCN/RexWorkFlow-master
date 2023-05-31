@@ -1,0 +1,90 @@
+﻿@model SysSystem
+@{
+    ViewData["Title"] = "查看系统信息";
+    Layout = "~/Views/Shared/_LayoutContent.cshtml";
+}
+
+@section css {
+    <style type="text/css">
+        .table-form tr td, .table-form tr th {
+            border: 1px #EFEFEF solid;
+        }
+
+        .user-img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .btn-container {
+            margin: 10px auto;
+            text-align: center;
+        }
+    </style>
+}
+
+@section scripts {
+    <script type="text/javascript">
+        layui.use(['jquery', 'util'], function () {
+            let $ = layui.jquery;
+            let util = layui.util;
+
+            // 格式化时间戳
+            $('#td_time').text(util.toDateString(@(Model.CreateTime) * 1000, 'yyyy-MM-dd HH:mm'));
+
+            // 关闭
+            $('.btn-cancel').on('click', function () {
+                var index = parent.layer.getFrameIndex(window.name);
+                parent.layer.close(index);
+            });
+        });
+    </script>
+}
+
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form" action="javascript:void(0);">
+            <table class="table-form">
+                <tr>
+                    <th>排序</th>
+                    <td>
+                        @Model.Sort
+                    </td>
+                </tr>
+                <tr>
+                    <th>系统编码</th>
+                    <td>
+                        @Model.SystemCode
+                    </td>
+                </tr>
+                <tr>
+                    <th>系统名称</th>
+                    <td>
+                        @Model.SystemName
+                    </td>
+                </tr>
+                <tr>
+                    <th>备注</th>
+                    <td>
+                        @Model.Memo
+                    </td>
+                </tr>
+                <tr>
+                    <th>账号状态</th>
+                    <td>
+                        @(Html.Raw(Model.IsDel == 0 ? "<span title=\"可用\" class=\"fa fa-check green\">可用</span>" : "<span title=\"已删除\" class=\"fa fa-trash red\">已删除</span>"))
+                    </td>
+                </tr>
+                <tr>
+                    <th>创建时间</th>
+                    <td id="td_time">
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+<div class="btn-container">
+    <button type="button" class="pear-btn btn-cancel">关闭</button>
+</div>

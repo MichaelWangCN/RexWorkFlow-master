@@ -1,0 +1,95 @@
+﻿@{ 
+    ViewData["Title"] = "用户管理";
+    Layout = "~/Views/Shared/_LayoutContent.cshtml";
+}
+
+@section css {
+    <style type="text/css">
+        .user-head-img {
+            width: 30px;
+            height: 30px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 1px #EFEFEF solid;
+        }
+    </style>
+}
+
+@section scripts {
+    <script src="~/src/sys/user/js/index.js" asp-append-version="true"></script>
+}
+<!-- 查询部分 -->
+<div class="layui-card search-card">
+    <div class="layui-card-body">
+        <form class="layui-form">
+            <div class="layui-form-item">
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">用户名</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="UserName" autocomplete="off" maxlength="10" class="layui-input" />
+                    </div>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">用户状态</label>
+                    <div class="layui-input-inline" style="width: 100px">
+                        <select name="IsDel">
+                            <option value="-1">-全部-</option>
+                            <option value="0" selected="selected">可用</option>
+                            <option value="1">不可用</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <button class="pear-btn pear-btn-md pear-btn-primary btn-search" lay-submit lay-filter="user-query">
+                        <i class="layui-icon layui-icon-search"></i>
+                        查询
+                    </button>
+                    <button type="reset" class="pear-btn pear-btn-md">
+                        <i class="layui-icon layui-icon-refresh"></i>
+                        重置
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 列表部分 -->
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="user_table" lay-filter="user-table"></table>
+    </div>
+</div>
+
+<!-- 数据表格操作部分 -->
+@await Component.InvokeAsync("Menu")
+
+<!-- 用户列表操作 -->
+<script type="text/html" id="user-bar">
+    <button class="pear-btn pear-btn-primary pear-btn-sm" lay-event="role"><i class="fa fa-group"></i>&nbsp;分配角色</button>
+    <button class="pear-btn pear-btn-success pear-btn-sm" lay-event="department"><i class="fa fa-sitemap"></i>&nbsp;分配部门</button>
+    <button class="pear-btn pear-btn-sm" lay-event="look"><i class="fa fa-eye"></i>&nbsp;查看</button>
+</script>
+
+<!-- 头像 -->
+<script type="text/html" id="user-img">
+    {{#if (layui.util.isEmpty(d.HeadImg)) { }}
+        无
+    {{# }else{ }}
+        <img src="{{ d.HeadImg }}" title="{{ d.UserName }}" class="user-head-img" />
+    {{# } }}
+</script>
+
+<!-- 账号状态 -->
+<script type="text/html" id="user-enable">
+    {{#if (d.IsDel == 0) { }}
+        <span title="可用" class="fa fa-check green"></span>
+    {{# }else{ }}
+        <span title="已删除" class="fa fa-trash red"></span>
+    {{# } }}
+</script>
+
+<!-- 日期格式化 -->
+<script type="text/html" id="user-createTime">
+    {{layui.util.toDateString(d.CreateTime * 1000, 'yyyy-MM-dd HH:mm')}}
+</script>

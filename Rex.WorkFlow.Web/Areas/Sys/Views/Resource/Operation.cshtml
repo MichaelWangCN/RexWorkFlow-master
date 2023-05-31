@@ -1,0 +1,130 @@
+﻿@model ResourceShowViewModel
+@{
+    ViewData["Title"] = "菜单操作";
+    Layout = "~/Views/Shared/_LayoutContent.cshtml";
+
+}
+
+@section css {
+    <style type="text/css">
+        /* 当前样式 */
+        .memo-textarea {
+            resize: none;
+            height: 100px;
+        }
+
+        .btn-parent-menu, .btn-icon-menu {
+            float: left;
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+
+        .input-parent-id, .input-icon-id {
+            width: calc(100% - 50px);
+            float: right;
+            cursor: default;
+        }
+
+        .table-form tr th {
+            width: 70px;
+        }
+    </style>
+}
+
+@section scripts {
+    <script src="~/src/js/zTree/js/jquery.min.js"></script>
+    <script type="text/javascript">
+        var parentTreeMenuData = '@(Html.Raw(JsonConvert.SerializeObject(Model.ParentMenus)))';
+        //设置默认选中
+        $.each(JSON.parse(parentTreeMenuData), function (i, item) {
+            if (item.checked) {
+                $('input[name=ParentId]').attr("data-id", item.id);
+                $("input[name=ParentId]").val(item.name);
+                return false;
+            }
+        });
+    </script>
+    <script src="~/src/sys/resource/js/operation.js" asp-append-version="true"></script>
+}
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form" action="javascript:void(0);">
+            <table class="table-form">
+                <tr>
+                    <th>菜单名称</th>
+                    <td>
+                        <input type="text" name="ResourceName" lay-verify="ResourceName" placeholder="请输入菜单名称" maxlength="10" autocomplete="off" class="layui-input" value="@Model.SysResource.ResourceName" />
+                    </td>
+                </tr>
+                <tr>
+                    <th>资源地址</th>
+                    <td>
+                        <input type="text" name="ResourceUrl" lay-verify="ResourceUrl" placeholder="请输入资源地址" maxlength="20" autocomplete="off" class="layui-input" value="@Model.SysResource.ResourceUrl" />
+                    </td>
+                </tr>
+                <tr>
+                    <th>父级菜单</th>
+                    <td>
+                        <input type="text" name="ParentId" lay-verify="ParentId" readonly="readonly" placeholder="请选择父级菜单" maxlength="20" autocomplete="off" class="layui-input input-parent-id" />
+                        <button class="pear-btn pear-btn-md pear-btn-primary btn-parent-menu"><i class="fa fa-plus"></i></button>
+                    </td>
+                </tr>
+                <tr>
+                    <th>菜单图标</th>
+                    <td>
+                        <input type="text" id="icon_picker" name="Icon" value="@Model.SysResource.Icon" lay-filter="iconPicker" class="layui-input" style="display: none;">
+                    </td>
+                </tr>
+                <tr>
+                    <th>显示到菜单</th>
+                    <td>
+                        <select name="IsShow">
+                            <option value="1" selected="@(Model.SysResource.IsShow == 1)">是</option>
+                            <option value="0" selected="@(Model.SysResource.IsShow == 0)">否</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th>同级排序</th>
+                    <td>
+                        <input type="number" name="Sort" min="0" class="layui-input" value="@Model.SysResource.Sort" />
+                    </td>
+                </tr>
+                <tr>
+                    <th>按钮</th>
+                    <td>
+                        @{
+                            foreach (var bvm in Model.ButtonViewModels)
+                            {
+                                <input type="checkbox" name="Btns" lay-skin="primary" data-id="@bvm.Id" data-buttontype="@bvm.ButtonType" data-buttonmodel="@bvm.ButtonModel" data-title="@bvm.Name" title="@bvm.Name" @(bvm.ButtonType == bvm.ButtonModel ? "checked=\"checked\"" : "") />
+                            }
+                        }
+                        <div class="red">注：此处分配的权限是对于详细页面。列表页面权限一般包含：查看、新增、编辑、删除</div>
+                    </td>
+                </tr>
+                <tr>
+                    <th>备注</th>
+                    <td>
+                        <textarea placeholder="请输入备注" name="Memo" class="layui-textarea memo-textarea">@Model.SysResource.Memo</textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <th>状态</th>
+                    <td>
+                        <input type="checkbox" name="IsDel" lay-skin="primary" @(Model.SysResource.IsDel == 0 ? "checked=\"checked\"" : "") />
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: center">
+                        <input type="hidden" name="CreateTime" />
+                        <input type="hidden" name="SystemId" value="@ViewBag.SystemId" />
+                        <input type="hidden" name="ResourceId" value="@Model.SysResource.ResourceId" />
+                        <!-- 加载操作按钮 -->
+                        @await Component.InvokeAsync("Menu", true)
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+

@@ -1,0 +1,44 @@
+﻿@{
+    ViewData["Title"] = "分配部门";
+    Layout = "~/Views/Shared/_LayoutContent.cshtml";
+}
+@section css {
+    <style type="text/css">
+        .dept-container {
+            margin: 0px auto;
+            height: 378px;
+            background-color: white;
+            overflow-y: auto;
+        }
+
+        .btn-container {
+            margin: 14px auto;
+            text-align: center;
+        }
+
+        .layui-form-checkbox {
+            margin: 10px;
+        }
+    </style>
+}
+
+@section scripts {
+    <script src="~/src/sys/user/js/dept.js" asp-append-version="true"></script>
+}
+
+<div class="dept-container">
+    <input type="hidden" name="UserId" value="@ViewBag.UserId" />
+    <form class="layui-form" action="javascript:void(0)">
+        <table class="table-form">
+            <tr>
+                <td id="td_dept">
+
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>
+<div class="btn-container">
+    <button class="pear-btn pear-btn-primary btn-submit">确定</button>
+    <button class="pear-btn btn-cancel">取消</button>
+</div>

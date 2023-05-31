@@ -1,0 +1,99 @@
+﻿@{
+    ViewData["Title"] = "分配用户";
+    Layout = "~/Views/Shared/_LayoutContent.cshtml";
+}
+
+@section css {
+    <style type="text/css">
+        .layui-card {
+            height: 650px;
+        }
+
+        .btn-container {
+            margin: 14px auto;
+            text-align: center;
+        }
+
+        .btn-cancel {
+            width: 100px;
+        }
+    </style>
+}
+
+@section scripts {
+    <script src="~/src/js/zTree/js/jquery.min.js"></script>
+    <script src="~/src/sys/role/js/assigningUsers.js" asp-append-version="true"></script>
+}
+
+<!-- 查询部分 -->
+<div class="layui-card search-card">
+    <div class="layui-card-body">
+        <form class="layui-form">
+            <div class="layui-form-item">
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">用户名</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="UserName" autocomplete="off" maxlength="10" class="layui-input" />
+                    </div>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">用户状态</label>
+                    <div class="layui-input-inline" style="width: 100px">
+                        <select name="IsDel">
+                            <option value="-1">-全部-</option>
+                            <option value="0" selected="selected">可用</option>
+                            <option value="1">不可用</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <button class="pear-btn pear-btn-md pear-btn-primary btn-search" lay-submit lay-filter="user-query">
+                        <i class="layui-icon layui-icon-search"></i>
+                        查询
+                    </button>
+                    <button type="reset" class="pear-btn pear-btn-md">
+                        <i class="layui-icon layui-icon-refresh"></i>
+                        重置
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 用户列表部分 -->
+<div class="layui-card">
+    <div class="layui-card-body">
+        <input type="hidden" name="RoleId" value="@ViewBag.RoleId" />
+        <input type="hidden" name="saveUser" />
+        <table id="au_table" lay-filter="au-table"></table>
+    </div>
+</div>
+
+<!-- 账号状态 -->
+<script type="text/html" id="au_enable">
+    {{#if (d.IsDel == 0) { }}
+    <span title="可用" class="fa fa-check green"></span>
+    {{# }else{ }}
+    <span title="已删除" class="fa fa-trash red"></span>
+    {{# } }}
+</script>
+
+<!-- 日期格式化 -->
+<script type="text/html" id="au_createTime">
+    {{layui.util.toDateString(d.CreateTime * 1000, 'yyyy-MM-dd HH:mm')}}
+</script>
+
+<!-- 工具栏操作 -->
+<script type="text/html" id="oper-toolbar">
+    <div class="pear-btn-group">
+        <button class="pear-btn pear-btn-primary" lay-event="add-user"><i class="fa fa-plus"></i>&nbsp;加入用户</button>
+        <button class="pear-btn pear-btn-danger" lay-event="del-user"><i class="fa fa-trash"></i>&nbsp;删除</button>
+    </div>
+</script>
+
+<!-- 按钮部分 -->
+<div class="btn-container">
+    <button class="pear-btn btn-cancel">返回</button>
+</div>
+

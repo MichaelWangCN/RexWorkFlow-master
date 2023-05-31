@@ -1,0 +1,39 @@
+﻿@{
+    ViewData["Title"] = "分配资源";
+    Layout = "~/Views/Shared/_LayoutContent.cshtml";
+}
+
+@section css {
+    <link href="~/src/js/zTree/css/bootstrapStyle/bootstrapStyle.css" rel="stylesheet" />
+    <style type="text/css">
+        .tree-container {
+            background-color: white;
+            margin: 0px auto;
+            height: 530px;
+            overflow-y: auto;
+        }
+
+        .btn-container {
+            margin: 14px auto;
+            text-align: center;
+        }
+    </style>
+}
+
+@section scripts {
+    <script src="~/src/js/zTree/js/jquery.min.js"></script>
+    <script src="~/src/js/zTree/js/jquery.ztree.core.js"></script>
+    <script src="~/src/js/zTree/js/jquery.ztree.excheck.js"></script>
+    <script src="~/src/js/zTree/js/jquery.ztree.exedit.js"></script>
+    <script src="~/src/sys/role/js/assigningResource.js" asp-append-version="true"></script>
+}
+
+<div class="tree-container">
+    <ul id="treeRole" class="ztree"></ul>
+    <input type="hidden" name="hroleid" value="@ViewBag.RoleId" />
+</div>
+<div class="btn-container">
+    <button class="pear-btn pear-btn-primary btn-submit">确定</button>
+    <button class="pear-btn btn-cancel">取消</button>
+</div>
+

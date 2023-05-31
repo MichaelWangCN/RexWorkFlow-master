@@ -1,0 +1,232 @@
+﻿@model CategoryDetailDto
+@{
+    ViewData["Title"] = "流程分类操作";
+    Layout = "~/Views/Shared/_LayoutContent.cshtml";
+}
+
+@section css {
+    <link href="~/src/js/zTree/css/bootstrapStyle/bootstrapStyle.css" rel="stylesheet" />
+    <style type="text/css">
+        /* 当前样式 */
+        .memo-textarea {
+            resize: none;
+            height: 100px;
+        }
+
+        .category-container {
+            display: none;
+            height: 255px;
+            overflow-y: auto;
+        }
+
+        .btn-parent-menu, .btn-icon-menu {
+            float: left;
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+
+        .input-parent-id, .input-icon-id {
+            width: calc(100% - 50px);
+            float: right;
+            cursor: default;
+        }
+    </style>
+}
+
+@section scripts {
+    <script src="~/src/js/zTree/js/jquery.min.js"></script>
+    <script src="~/src/js/zTree/js/jquery.ztree.core.js"></script>
+    <script src="~/src/js/zTree/js/jquery.ztree.excheck.js"></script>
+    <script src="~/src/js/zTree/js/jquery.ztree.exedit.js"></script>
+    <script type="text/javascript">
+        var openParentCategoryIndex;
+        layui.use(['layer', 'form', 'jquery', 'util'], function () {
+            let layer = layui.layer;
+            let form = layui.form;
+            let $ = layui.jquery;
+            var util = layui.util;
+
+            // 表单验证
+            form.verify({
+                Name: function (value, item) { //value：表单的值、item：表单的DOM对象
+                    if (util.isEmpty(value)) {
+                        return '分类名称不能为空！';
+                    }
+                }
+            });
+
+            // 初始化父级分类
+            initParentCategory();
+
+            // 点击父级分类
+            $('.btn-parent-menu').on('click', function () {
+                openParentCategoryIndex = layer.open({
+                    type: 1,
+                    title: '选择父级分类',
+                    shade: 0.1,
+                    offset: '10px',
+                    area: ['200px', '300px'],
+                    content: $('.category-container'),
+                    success: function (layero, index) {
+                        $('.category-container').show();
+                    },
+                    cancel: function (index) {
+                        $('.category-container').hide();
+                    }
+                });
+            });
+
+            // 操作(提交)
+            form.on('submit(operation-submit)', function (data) {
+                debugger
+                data.field.Status = $('input[name=Status]').prop("checked") ? 1 : 0;
+                data.field.ParentId = $('input[name=ParentId]').attr("data-parentId");
+                data.field.ParentName = $('input[name=ParentId]').val();
+                
+                var cId = $('input[name=Id]').val();
+                var requestUrl = util.isEmpty(cId) ? "/WF/Category/Update" : "/WF/Category/Add";
+                $.ajax({
+                    url: requestUrl,
+                    type: 'POST',
+                    data: JSON.stringify(data.field),
+                    dataType: 'json',
+                    contentType: 'application/json;charset=utf-8',
+                    beforeSend: function () {
+                        layer.load(1);
+                    },
+                    success: function (res) {
+                        layer.closeAll('loading');
+                        if (res.code === 0) {
+                            layer.msg(res.msg, { icon: 1 }, function () {
+                                if (parent.clickSearch) {
+                                    parent.clickSearch();
+                                }
+                                $('.btn-cancel').click();
+                            });
+                            return;
+                        }
+                        layer.msg(res.msg, { icon: 5 });
+                    },
+                    error: function (data) {
+                        layer.closeAll('loading');
+                        console.error(data.responseText);
+                    }
+                });
+                return false;
+            });
+
+            // 取消
+            $('.btn-cancel').on('click', function () {
+                var index = parent.layer.getFrameIndex(window.name);
+                parent.layer.close(index);
+            });
+
+        });
+
+        // 初始化父级分类
+        function initParentCategory() {
+            var value = $('input[name=Id]').val();
+            $.ajax({
+                url: '/WF/Category/GetCategoryTreeAsync',
+                type: 'GET',
+                data: {
+                    id: value
+                },
+                dataType: 'json',
+                // contentType: 'application/json;charset=utf-8',
+                beforeSend: function () {
+                    layer.load(1);
+                },
+                success: function (res) {
+                    layer.closeAll('loading');
+                    if (res.code === 0) {
+
+                        var parentMenus = res.data;
+                        //设置默认选中
+                        $.each(parentMenus, function (i, item) {
+                            if (item.id == $('input[name=ParentId]').val()) {
+                                $('input[name=ParentId]').attr("data-parentId", item.id);
+                                $('input[name=ParentId]').val(item.name);
+                                return false;
+                            }
+                        });
+                        var zNodes = parentMenus;
+                        var setting = {
+                            view: {
+                                dblClickExpand: false
+                            },
+                            data: {
+                                simpleData: {
+                                    enable: true
+                                }
+                            },
+                            callback: {
+                                beforeClick: function (treeId, treeNode) {
+                                    $('input[name=ParentId]').attr("data-parentId", treeNode.id);
+                                    $('input[name=ParentId]').val(treeNode.name);
+                                    layer.close(openParentCategoryIndex);
+                                    $('.category-container').hide();
+                                }
+                            }
+                        };
+
+                        var treeobj = $.fn.zTree.init($("#treeCategory"), setting, zNodes);
+                        treeobj.expandAll(true);
+
+                        return;
+                    }
+                    layer.msg(res.msg, { icon: 5 });
+                },
+                error: function (data) {
+                    layer.closeAll('loading');
+                    console.error(data.responseText);
+                }
+            });
+        }
+    </script>
+}
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form" action="javascript:void(0);">
+            <table class="table-form">
+                <tr>
+                    <th>分类名称</th>
+                    <td>
+                        <input type="text" name="Name" lay-verify="Name" placeholder="请输入系统名称" maxlength="20" autocomplete="off" class="layui-input" value="@Model.Name" />
+                    </td>
+                </tr>
+                <tr>
+                    <th>父级分类</th>
+                    <td>
+                        <input type="text" min="0" max="1000" name="ParentId" placeholder="请选择父级分类" autocomplete="off" class="layui-input input-parent-id" value="@Model.ParentId" readonly="readonly" />
+                        <button class="pear-btn pear-btn-md pear-btn-primary btn-parent-menu"><i class="fa fa-plus"></i></button>
+                    </td>
+                </tr>
+                <tr>
+                    <th>备注</th>
+                    <td>
+                        <textarea placeholder="请输入备注" name="Memo" class="layui-textarea memo-textarea">@Model.Memo</textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <th>分类状态</th>
+                    <td>
+                        <input type="checkbox" name="Status" lay-skin="primary" @(Model.Status == 1 ? "checked=\"checked\"" : "") />
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: center">
+                        <input type="hidden" name="CreateTime" />
+                        <input type="hidden" name="Id" value="@Model.Id" />
+                        <!-- 加载操作按钮 -->
+                        @await Component.InvokeAsync("Menu", true)
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+
+<div class="category-container">
+    <ul id="treeCategory" class="ztree"></ul>
+</div>

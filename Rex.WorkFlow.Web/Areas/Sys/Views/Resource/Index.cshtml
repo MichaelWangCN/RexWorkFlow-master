@@ -1,0 +1,83 @@
+﻿@model IList<JadeFramework.Core.Domain.Entities.SelectListItem>
+@{
+    ViewData["Title"] = "部门管理";
+    Layout = "~/Views/Shared/_LayoutContent.cshtml";
+}
+
+@section css {
+    <style type="text/css">
+        .btn-opr {
+            margin: 0px 2px;
+        }
+    </style>
+}
+@section scripts {
+    <script src="~/src/sys/resource/js/index.js" asp-append-version="true"></script>
+}
+<!-- 查询部分 -->
+<div class="layui-card search-card">
+    <div class="layui-card-body">
+        <form class="layui-form">
+            <div class="layui-form-item">
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">所属系统</label>
+                    <div class="layui-input-inline">
+                        <select name="SystemId">
+                            <option value="0">-请选择系统-</option>
+                            @{
+                                foreach (var item in Model)
+                                {
+                                    <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <button class="pear-btn pear-btn-md pear-btn-primary btn-search" lay-submit lay-filter="resource-query">
+                        <i class="layui-icon layui-icon-search"></i>
+                        查询
+                    </button>
+                    <button type="reset" class="pear-btn pear-btn-md">
+                        <i class="layui-icon layui-icon-refresh"></i>
+                        重置
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 列表部分 -->
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="resource_table" lay-filter="resource-table"></table>
+    </div>
+</div>
+
+<!-- 数据表格操作部分 -->
+@await Component.InvokeAsync("Menu")
+
+<!-- 图标 -->
+<script type="text/html" id="resource_icon">
+    <i class="{{ d.Icon }}"></i>
+</script>
+
+<!-- 操作权限 -->
+<script type="text/html" id="resource_btns">
+    {{ formatBtn(d.Buttons) }}
+</script>
+
+<!-- 状态 -->
+<script type="text/html" id="resource_enable">
+    {{#if (d.IsDel == 0) { }}
+    <span title="可用" class="fa fa-check green"></span>
+    {{# }else{ }}
+    <span title="已删除" class="fa fa-trash red"></span>
+    {{# } }}
+</script>
+
+<!-- 日期格式化 -->
+<script type="text/html" id="resource_createTime">
+    {{layui.util.toDateString(d.CreateTime * 1000, 'yyyy-MM-dd HH:mm')}}
+</script>
